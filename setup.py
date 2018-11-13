@@ -21,7 +21,7 @@ extras_require = {
 }
 
 setup(
-    name="spikestatistics",
+    name="spatialspikefields",
     install_requires=install_requires,
     tests_require=install_requires,
     extras_require=extras_require,
