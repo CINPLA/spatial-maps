@@ -1,7 +1,4 @@
-from __future__ import absolute_import, division, print_function
-
 import numpy as np
-import quantities as pq
 
 
 def _inf_rate(rate_map, px):
@@ -115,7 +112,7 @@ def information_rate(rate_map, px):
        Deciphering the Hippocampal Code. In Advances in Neural Information
        Processing Systems 5. pp. 1030-1037.
     '''
-    return _inf_rate(rate_map, px)[0] * pq.bit/pq.s
+    return _inf_rate(rate_map, px)[0]
 
 
 def information_specificity(rate_map, px):
