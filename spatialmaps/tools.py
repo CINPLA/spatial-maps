@@ -2,10 +2,10 @@ import numpy as np
 
 
 def autocorrelation(rate_map, mode='full', normalize=True):
-    return _fftcorrelate2d(rate_map, rate_map, mode=mode, normalize=normalize)
+    return fftcorrelate2d(rate_map, rate_map, mode=mode, normalize=normalize)
     
 
-def _fftcorrelate2d(arr1, arr2, mode='full', normalize=False):
+def fftcorrelate2d(arr1, arr2, mode='full', normalize=False):
     """
     Cross correlation of two 2 dimensional arrays using fftconvolve from scipy.
     Parameters
@@ -28,7 +28,7 @@ def _fftcorrelate2d(arr1, arr2, mode='full', normalize=False):
     Example
     --------
     >>> a = np.reshape(np.arange(4), (2,2))
-    >>> acorr = _fftcorrelate2d(a, a)
+    >>> acorr = fftcorrelate2d(a, a)
     """
     # TODO replace with astropy - just verify results are the same
     from scipy.signal import fftconvolve
@@ -41,7 +41,7 @@ def _fftcorrelate2d(arr1, arr2, mode='full', normalize=False):
     return corr
 
 
-def _masked_corrcoef2d(arr1, arr2):
+def masked_corrcoef2d(arr1, arr2):
     """
     Correlation coefficient of two 2 dimensional masked arrays.
     Parameters
@@ -69,7 +69,7 @@ def _masked_corrcoef2d(arr1, arr2):
     >>> print(v)
     [[0 1 2 3 4]
      [5 6 7 -- --]]
-    >>> _masked_corrcoef2d(a, v)
+    >>> masked_corrcoef2d(a, v)
     masked_array(
       data=[[1.0, 1.0],
             [1.0, 1.0]],

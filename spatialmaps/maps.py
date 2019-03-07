@@ -2,7 +2,7 @@ import numpy as np
 from astropy.convolution import Gaussian2DKernel, convolve_fft
 import scipy.ndimage as ndimage
 import scipy.ndimage.filters as filters
-from .tools import _fftcorrelate2d, _masked_corrcoef2d, autocorrelation
+from .tools import fftcorrelate2d, masked_corrcoef2d, autocorrelation
 
 
 def _adjust_bin_size(box_size, bin_size=None, bin_count=None):
@@ -49,7 +49,7 @@ def rotate_corr(acorr, mask):
     for angle in angles:
         rot_acorr = rotate(acorr, angle, reshape=False)
         rot_acorr = ma.masked_array(rot_acorr, mask=mask)
-        corr.append(_masked_corrcoef2d(rot_acorr, m_acorr)[0, 1])
+        corr.append(masked_corrcoef2d(rot_acorr, m_acorr)[0, 1])
     r60 = corr[1::2]
     r30 = corr[::2]
     return r30, r60
