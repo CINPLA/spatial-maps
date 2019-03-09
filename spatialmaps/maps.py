@@ -27,32 +27,7 @@ def _adjust_bin_size(box_size, bin_size=None, bin_count=None):
                          box_size[1] / int(box_size[1] / bin_size[1])])
 
     return box_size, bin_size
-
-
-def _digitize(x, y, box_size, bin_size):
-    xbins = np.arange(0, box_size[0] + bin_size[0], bin_size[0])
-    ybins = np.arange(0, box_size[1] + bin_size[1], bin_size[1])
-
-    ix = np.digitize(x, xbins, right=True)
-    iy = np.digitize(y, ybins, right=True)
-
-    return xbins, ybins, ix, iy
-
-
-def rotate_corr(acorr, mask):
-    import numpy.ma as ma
-    from scipy.ndimage.interpolation import rotate
-    m_acorr = ma.masked_array(acorr, mask=mask)
-    angles = range(30, 180+30, 30)
-    corr = []
-    # Rotate and compute correlation coefficient
-    for angle in angles:
-        rot_acorr = rotate(acorr, angle, reshape=False)
-        rot_acorr = ma.masked_array(rot_acorr, mask=mask)
-        corr.append(masked_corrcoef2d(rot_acorr, m_acorr)[0, 1])
-    r60 = corr[1::2]
-    r30 = corr[::2]
-    return r30, r60
+    
 
 def find_peaks(image):
     """
@@ -94,14 +69,14 @@ def smooth_map(rate_map, bin_size, smoothing):
     return convolve_fft(rate_map, kernel)
 
 
-def _occupancy_map(x, y, t, xbins, ybins, ix, iy):
+def _occupancy_map(x, y, t, xbins, ybins):
     t_ = np.append(t, t[-1] + np.median(np.diff(t)))
     time_in_bin = np.diff(t_)
     values, _, _ = np.histogram2d(y, x, bins=[xbins, ybins], weights=time_in_bin)
     return values
 
 
-def _spike_map(x, y, t, spike_times, xbins, ybins, ix, iy):
+def _spike_map(x, y, t, spike_times, xbins, ybins):
     t_ = np.append(t, t[-1] + np.median(np.diff(t)))
     spikes_in_bin, _ = np.histogram(spike_times, t_)
     values, _, _ = np.histogram2d(y, x, bins=[xbins, ybins], weights=spikes_in_bin)
@@ -261,10 +236,11 @@ def fields_from_distance(rate_map):
 class SpatialMap:
     def __init__(self, x, y, t, spike_times, box_size, bin_size, bin_count=None):
         box_size, bin_size = _adjust_bin_size(box_size, bin_size, bin_count)
-        xbins, ybins, ix, iy = _digitize(x, y, box_size, bin_size)
+        xbins = np.arange(0, box_size[0] + bin_size[0], bin_size[0])
+        ybins = np.arange(0, box_size[1] + bin_size[1], bin_size[1])
 
-        self.spike_pos = _spike_map(x, y, t, spike_times, xbins, ybins, ix, iy)
-        self.time_pos = _occupancy_map(x, y, t, xbins, ybins, ix, iy)
+        self.spike_pos = _spike_map(x, y, t, spike_times, xbins, ybins)
+        self.time_pos = _occupancy_map(x, y, t, xbins, ybins)
 
         self.bin_size = bin_size
         self.box_size = box_size

@@ -1,4 +1,21 @@
 import numpy as np
+from spatialmaps.tools import autocorrelation, fftcorrelate2d, masked_corrcoef2d
+from spatialmaps.maps import find_peaks, peak_to_peak_distance
+
+def rotate_corr(acorr, mask):
+    import numpy.ma as ma
+    from scipy.ndimage.interpolation import rotate
+    m_acorr = ma.masked_array(acorr, mask=mask)
+    angles = range(30, 180+30, 30)
+    corr = []
+    # Rotate and compute correlation coefficient
+    for angle in angles:
+        rot_acorr = rotate(acorr, angle, reshape=False)
+        rot_acorr = ma.masked_array(rot_acorr, mask=mask)
+        corr.append(masked_corrcoef2d(rot_acorr, m_acorr)[0, 1])
+    r60 = corr[1::2]
+    r30 = corr[::2]
+    return r30, r60
 
 
 def gridness(rate_map, return_mask=False):
@@ -56,7 +73,7 @@ def gridness(rate_map, return_mask=False):
         return gridscore, ma.masked_array(acorr, mask=mask)
 
     return gridscore
-    
+
 
 def spacing_and_orientation(peaks, box_size):
     """
