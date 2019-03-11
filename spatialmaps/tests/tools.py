@@ -28,6 +28,24 @@ def make_test_grid_rate_map(
     return rate_map, np.array(pos), xbins, ybins
 
 
+def make_test_border_map(
+    box_size, bin_size, sigma=0.05, amplitude=1., offset=0):
+
+    xbins = np.arange(0, box_size[0], bin_size[0])
+    ybins = np.arange(0, box_size[1], bin_size[1])
+    x,y = np.meshgrid(xbins, ybins)
+
+    p0 = np.array((box_size[0], box_size[1] / 2)) + offset
+    pos = [p0]
+
+    angles = np.linspace(0, 2 * np.pi, 7)[:-1]
+
+    rate_map = np.zeros_like(x)
+    rate_map += gaussian2D(amplitude, x, y, *p0, sigma)
+
+    return rate_map, np.array(pos), xbins, ybins
+
+
 def random_walk(box_size, step_size, n_step):
     # edited from https://stackoverflow.com/questions/48777345/vectorized-random-walk-in-python-with-boundaries
     start = np.array([0, 0])
@@ -55,8 +73,7 @@ def make_test_spike_map(
         else:
             return False
 
-    dt = step_size / 1.5 # s / max_speed
-    t = np.linspace(0, n_step * dt, n_step)
+    t = np.linspace(0, n_step * step_size / 1.5, n_step) # s / max_speed
     trajectory = random_walk(box_size, step_size, n_step)
     x, y = trajectory.T
     st = homogeneous_poisson_process(

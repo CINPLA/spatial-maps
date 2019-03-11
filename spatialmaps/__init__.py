@@ -1,4 +1,7 @@
-from .maps import SpatialMap, border_score
+from .maps import SpatialMap
 from .gridcells import gridness, spacing_and_orientation
-from .stats import (sparsity, selectivity, information_rate,
-                    information_specificity, prob_dist)
+from .fields import (
+    border_score, calculate_field_centers, separate_fields_from_laplace)
+from .stats import (
+    sparsity, selectivity, information_rate, information_specificity,
+    prob_dist)

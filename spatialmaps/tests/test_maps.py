@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from spatialmaps import SpatialMap
+from spatialmaps.maps import SpatialMap
 import quantities as pq
 from tools import make_test_grid_rate_map, make_test_spike_map
 

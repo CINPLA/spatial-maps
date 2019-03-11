@@ -1,6 +1,74 @@
 import numpy as np
 from spatialmaps.tools import autocorrelation, fftcorrelate2d, masked_corrcoef2d
-from spatialmaps.maps import find_peaks, peak_to_peak_distance
+from spatialmaps.fields import find_peaks
+
+
+def separate_fields_from_distance(rate_map):
+    import scipy.spatial as spatial
+
+    acorr = autocorrelation(rate_map, mode='full', normalize=True)
+    acorr_maxima = find_peaks(acorr)
+
+    def place_field_radius(auto_correlation, maxima):
+        map_size = np.array(auto_correlation.shape)
+        center = map_size / 2
+        distances = np.linalg.norm(maxima - center, axis=1)
+        distances_sorted = sorted(distances)
+        min_distance = distances_sorted[1] # the first one is basically the center
+        # TODO consider a different factor than 0.7
+        return 0.7 * min_distance / 2 # 0.7 because that is what Ismakov et al. used
+
+    # TODO verify this for an example where there are fields too close
+    def too_close_removed(rate_map, rate_map_maxima, place_field_radius):
+        result = []
+        rate_map_maxima_value = rate_map[tuple(rate_map_maxima.T)]
+        distances = spatial.distance.cdist(rate_map_maxima, rate_map_maxima)
+        too_close_pairs = np.where(distances < place_field_radius*2)
+        not_accepted = []
+
+        for i, j in zip(*too_close_pairs):
+            if i == j:
+                continue
+
+            if rate_map_maxima_value[i] > rate_map_maxima_value[j]:
+                not_accepted.append(j)
+            else:
+                not_accepted.append(i)
+
+        for i in range(len(rate_map_maxima)):
+            if i in not_accepted:
+                continue
+
+            result.append(rate_map_maxima[i])
+
+        return np.array(result)
+
+    radius = place_field_radius(acorr, acorr_maxima)
+
+    rate_map_maxima = find_peaks(rate_map)
+    rate_map_maxima = too_close_removed(rate_map, rate_map_maxima, radius)
+    # rate_map_maxima = rate_map_maxima.astype(float) * bin_size
+    # radius *= bin_size[0]
+
+    return rate_map_maxima, radius
+
+
+def peak_to_peak_distance(sorted_peaks, index_a, index_b):
+    """
+    Distance between peaks ordered by their distance from center.
+
+    The peaks are first ordered.
+    The distance between the requested peaks is calculated,
+    where the indices determine which peak in the order is requested.
+
+    If one of the peak indices does not exist, this function returns infinity.
+    """
+    try:
+        distance = np.linalg.norm(sorted_peaks[index_b] - sorted_peaks[index_a])
+    except IndexError:
+        distance = np.inf
+    return distance
+
 
 def rotate_corr(acorr, mask):
     import numpy.ma as ma
@@ -82,9 +150,9 @@ def spacing_and_orientation(peaks, box_size):
     Parameters
     ----------
     peaks : Nx2 np.array
-                x,y positions of peak centers in real units
+        x,y positions of peak centers in real units from a rate map autocorrelogram
     box_size: 1x2 np.array
-                size of box in real units (needs to be size of autocorrelogram if that is used)
+        size of box in real units (needs to be size of autocorrelogram if that is used)
     Returns
     -------
     spacing : float
@@ -121,10 +189,21 @@ def spacing_and_orientation(peaks, box_size):
     spacing = np.mean(closest_distances)
 
     # sort by angle
-    a = np.arctan2(closest_relpos[:,0], closest_relpos[:,1])%(2*np.pi)
+    a = np.arctan2(closest_relpos[:,0], closest_relpos[:,1]) % (2 * np.pi)
     a_sort = np.argsort(a)
 
-    # extract lowest angle and convert to degrees
+    # extract lowest angle in radians
     orientation = a[a_sort][0]
 
     return spacing, orientation
+
+
+def autocorrelation_centers(rate_map, threshold=0, center_method='maxima'):
+    # autocorrelate. Returns array (2x - 1) the size of rate_map
+    acorr = fftcorrelate2d(
+        rate_map, rate_map, mode='full', normalize=True)
+    fields = separate_fields_from_laplace(rate_map, threshold=threshold)
+
+    field_centers = calculate_field_centers(
+        rate_map, fields, center_method=center_method)
+    return field_centers
