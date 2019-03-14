@@ -108,7 +108,8 @@ def gridness(rate_map, return_mask=False):
     out : gridness
     '''
     import numpy.ma as ma
-
+    rate_map = rate_map.copy()
+    rate_map[~np.isfinite(rate_map)] = 0
     acorr = autocorrelation(rate_map, mode='full', normalize=True)
 
     acorr_maxima = find_peaks(acorr)
