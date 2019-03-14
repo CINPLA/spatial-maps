@@ -1,9 +1,9 @@
 import numpy as np
 import pytest
-from spatialmaps import SpatialMap
+from spatial_maps import SpatialMap
 import quantities as pq
 from tools import make_test_grid_rate_map, make_test_spike_map
-from spatialmaps.gridcells import (
+from spatial_maps.gridcells import (
     gridness, spacing_and_orientation, separate_fields_from_distance)
 
 

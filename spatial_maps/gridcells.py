@@ -1,6 +1,6 @@
 import numpy as np
-from spatialmaps.tools import autocorrelation, fftcorrelate2d, masked_corrcoef2d
-from spatialmaps.fields import find_peaks
+from spatial_maps.tools import autocorrelation, fftcorrelate2d, masked_corrcoef2d
+from spatial_maps.fields import find_peaks
 
 
 def separate_fields_from_distance(rate_map):

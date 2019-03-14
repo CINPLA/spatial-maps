@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import quantities as pq
 from tools import make_test_grid_rate_map, make_test_border_map
-from spatialmaps.fields import (
+from spatial_maps.fields import (
     separate_fields_from_laplace, find_peaks, calculate_field_centers,
     border_score)
 
