@@ -8,11 +8,15 @@ def find_peaks(image):
     """
     Returns peaks sorted by distance from center of image.
     """
+    image = image.copy()
+    image[~np.isfinite(image)] = 0
     image_max = filters.maximum_filter(image, 3)
     is_maxima = (image == image_max)
     labels, num_objects = ndimage.label(is_maxima)
     indices = np.arange(1, num_objects+1)
     peaks = ndimage.maximum_position(image, labels=labels, index=indices)
+    # if len(peaks) == 0:
+    #     return None
     peaks = np.array(peaks)
     center = np.array(image.shape) / 2
     distances = np.linalg.norm(peaks - center, axis=1)

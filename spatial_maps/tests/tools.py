@@ -1,4 +1,4 @@
-from spatialmaps.tools import gaussian2D
+from spatial_maps.tools import gaussian2D
 import quantities as pq
 import numpy as np
 

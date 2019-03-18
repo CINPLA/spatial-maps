@@ -3,7 +3,7 @@ import pytest
 import quantities as pq
 import neo
 from tools import random_walk
-from spatialmaps.speed import speed_correlation
+from spatial_maps.speed import speed_correlation
 # TODO need a better test, where we can set the corr beforehand
 
 def test_speed_random():

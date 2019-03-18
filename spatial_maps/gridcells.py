@@ -1,6 +1,6 @@
 import numpy as np
-from spatialmaps.tools import autocorrelation, fftcorrelate2d, masked_corrcoef2d
-from spatialmaps.fields import find_peaks
+from spatial_maps.tools import autocorrelation, fftcorrelate2d, masked_corrcoef2d
+from spatial_maps.fields import find_peaks
 
 
 def separate_fields_from_distance(rate_map):
@@ -108,7 +108,8 @@ def gridness(rate_map, return_mask=False):
     out : gridness
     '''
     import numpy.ma as ma
-
+    rate_map = rate_map.copy()
+    rate_map[~np.isfinite(rate_map)] = 0
     acorr = autocorrelation(rate_map, mode='full', normalize=True)
 
     acorr_maxima = find_peaks(acorr)

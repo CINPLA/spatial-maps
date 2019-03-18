@@ -21,7 +21,7 @@ extras_require = {
 }
 
 setup(
-    name="spatialmaps",
+    name="spatial_maps",
     install_requires=install_requires,
     tests_require=install_requires,
     extras_require=extras_require,
