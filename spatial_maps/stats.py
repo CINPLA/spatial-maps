@@ -179,3 +179,58 @@ def prob_dist_1d(x, bins):
 
     H, _ = np.histogram(x, bins=bins, normed=False)
     return (H / len(x)).T
+
+
+def pvcorr(rmaps1, rmaps2, min_rate=None):
+    """
+    Calcualte population vector correlation between two
+    stacks of rate maps.
+    
+    Parameters
+    ----------
+    rmaps1 : ndarray
+    Array of the shape [n_units, n_bins_dim1, n_bins_dim2]
+    rmaps2 : ndarray
+    Array of the shape [n_units, n_bins_dim1, n_bins_dim2]
+    min_rate : float
+    "Cells with firing below 1 Hz in all x-y bins of the
+     two sessions that were compared were excluded from
+     the population vectors before calculating the
+     correlation coefficients" Mankin et al, Neuron, 2016
+
+    Returns
+    -------
+    pop_vec_corr : float
+    Population vector correlation
+    """
+
+    # make is float
+    rmaps1 = rmaps1.astype(float)
+    rmaps2 = rmaps2.astype(float)
+    
+    bins_x = rmaps1.shape[1]
+    bins_y = rmaps1.shape[2]
+
+    assert rmaps1.shape == rmaps2.shape
+    # correlation coefficient requires at least 2x2 values
+    assert rmaps1.shape[0] > 1
+
+    id_include = np.ones(rmaps1.shape[0], dtype=bool)
+    
+    if min_rate:
+        for i in range(rmaps1.shape[0]):
+            # get all rates
+            max1 = np.max(rmaps1[i, :, :])
+            max2 = np.max(rmaps2[i, :, :])
+            if max1 < min_rate or max2 < min_rate:
+                id_include[i] = False
+
+    corr_coeff = np.zeros((bins_x, bins_y))
+    for i in range(bins_x):
+        for j in range(bins_y):
+            xy1 = rmaps1[id_include, i, j]
+            xy2 = rmaps2[id_include, i, j]
+            corr_coeff[i, j] = np.corrcoef(
+                xy1, xy2)[0, 1]
+    pop_vec_corr = np.nanmean(corr_coeff)
+    return pop_vec_corr
