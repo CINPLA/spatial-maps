@@ -235,8 +235,9 @@ def population_vector_correlation(rmaps1, rmaps2,
                 xy1,
                 xy2)[0, 1]
 
+    pop_vec_corr = np.nanmean(corr_coeff_map)
+    
     if return_corr_coeff_map:
-        return corr_coeff_map
+        return pop_vec_corr, corr_coeff_map
     else:
-        pop_vec_corr = np.nanmean(corr_coeff_map)
         return pop_vec_corr
