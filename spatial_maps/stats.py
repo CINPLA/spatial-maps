@@ -181,7 +181,9 @@ def prob_dist_1d(x, bins):
     return (H / len(x)).T
 
 
-def population_vector_correlation(rmaps1, rmaps2, mask_nans=False):
+def population_vector_correlation(rmaps1, rmaps2,
+                                  mask_nans=False,
+                                  return_corr_coeff_map=False):
     """
     Calcualte population vector correlation between two
     stacks of rate maps.
@@ -195,6 +197,9 @@ def population_vector_correlation(rmaps1, rmaps2, mask_nans=False):
     mask_nans : bool
     If mask_nans, nan-values will be excluded for x-, y-bin
     from the correlation calculation
+    return_corrcoeffs : bool
+    If return_corr_coeff_map, return the correlation coefficient
+    map instead for the mean.
 
     Returns
     -------
@@ -208,8 +213,8 @@ def population_vector_correlation(rmaps1, rmaps2, mask_nans=False):
     # correlation coefficient requires at least 2x2 values
     assert rmaps1.shape[0] > 1
 
-    corr_coeff = np.zeros((bins_x, bins_y))
-    corr_coeff[:] = np.nan
+    corr_coeff_map = np.zeros((bins_x, bins_y))
+    corr_coeff_map[:] = np.nan
     
     for i in range(bins_x):
         for j in range(bins_y):
@@ -226,9 +231,12 @@ def population_vector_correlation(rmaps1, rmaps2, mask_nans=False):
                 xy1 = xy1[mask_valid]
                 xy2 = xy2[mask_valid]
 
-            corr_coeff[i, j] = np.corrcoef(
+            corr_coeff_map[i, j] = np.corrcoef(
                 xy1,
                 xy2)[0, 1]
 
-    pop_vec_corr = np.nanmean(corr_coeff)
-    return pop_vec_corr
+    if return_corr_coeff_map:
+        return corr_coeff_map
+    else:
+        pop_vec_corr = np.nanmean(corr_coeff_map)
+        return pop_vec_corr
