@@ -1,7 +1,4 @@
 import numpy as np
-import pdb
-import numpy.ma as ma
-import copy
 
 
 def _inf_rate(rate_map, px):
@@ -184,22 +181,7 @@ def prob_dist_1d(x, bins):
     return (H / len(x)).T
 
 
-def _mask_in_both_if_any_is_nan(c0, c1):
-    """
-    Mask values in both cubes, if it is nan in cube 0 or/and
-    cube 1.
-    Returns boolean mask array.
-    """
-    bool_nan_c0 = np.isnan(c0)
-    bool_nan_c1 = np.isnan(c1)
-
-    mask_invalid = np.logical_or(bool_nan_c0,
-                                 bool_nan_c1)
-    mask_valid = ~mask_invalid
-    return mask_valid
-
-
-def population_vector_correlation(rmaps1, rmaps2, min_rate=None):
+def population_vector_correlation(rmaps1, rmaps2, mask_nans=False):
     """
     Calcualte population vector correlation between two
     stacks of rate maps.
@@ -210,16 +192,15 @@ def population_vector_correlation(rmaps1, rmaps2, min_rate=None):
     Array of the shape [n_units, n_bins_dim1, n_bins_dim2]
     rmaps2 : ndarray
     Array of the shape [n_units, n_bins_dim1, n_bins_dim2]
+    mask_nans : bool
+    If mask_nans, nan-values will be excluded for x-, y-bin
+    from the correlation calculation
 
     Returns
     -------
     pop_vec_corr : float
     Population vector correlation
     """
-    # make is float
-    rmaps1 = rmaps1.astype(float)
-    rmaps2 = rmaps2.astype(float)
-    
     bins_x = rmaps1.shape[1]
     bins_y = rmaps1.shape[2]
 
@@ -230,19 +211,24 @@ def population_vector_correlation(rmaps1, rmaps2, min_rate=None):
     corr_coeff = np.zeros((bins_x, bins_y))
     corr_coeff[:] = np.nan
     
-    # create mask. exclude value if nan in any of the two stacks
-    mask_valid = _mask_in_both_if_any_is_nan(rmaps1, rmaps2)
-    
     for i in range(bins_x):
         for j in range(bins_y):
-            xy1 = rmaps1[id_include, i, j]
-            xy2 = rmaps2[id_include, i, j]
-            msk = mask_valid[id_include, i, j]
-            # just evaluate correlation if there are any values
-            if np.sum(msk) > 2:
-                corr_coeff[i, j] = np.corrcoef(
-                    xy1[msk],
-                    xy2[msk])[0, 1]
+            xy1 = rmaps1[:, i, j]
+            xy2 = rmaps2[:, i, j]
+            if mask_nans:
+                bool_nan_xy1 = np.isnan(xy1)
+                bool_nan_xy2 = np.isnan(xy2)
+
+                mask_invalid = np.logical_or(
+                    bool_nan_xy1,
+                    bool_nan_xy2)
+                mask_valid = ~mask_invalid
+                xy1 = xy1[mask_valid]
+                xy2 = xy2[mask_valid]
+
+            corr_coeff[i, j] = np.corrcoef(
+                xy1,
+                xy2)[0, 1]
 
     pop_vec_corr = np.nanmean(corr_coeff)
     return pop_vec_corr
