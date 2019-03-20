@@ -1,4 +1,6 @@
 import numpy as np
+import pdb
+import numpy.ma as ma
 
 
 def _inf_rate(rate_map, px):
@@ -180,8 +182,32 @@ def prob_dist_1d(x, bins):
     H, _ = np.histogram(x, bins=bins, normed=False)
     return (H / len(x)).T
 
+def _max_of_planes_in_cube(c):
+    """
+    Given a cube of shape [s0, s1, s2], find the maximum of
+    each plane s0i of shape [s1, s2]
+    """
+    max_ax1 = np.nanmax(c, axis=1)
+    max_ax12 = np.nanmax(max_ax1, axis=1)
 
-def pvcorr(rmaps1, rmaps2, min_rate=None):
+    return max_ax12
+
+def _mask_in_both_if_any_is_nan(c0, c1):
+    """
+    Mask values in both cubes, if it is nan in cube 0 or/and
+    cube 1.
+    Returns boolean mask array.
+    """
+    bool_nan_c0 = np.isnan(c0)
+    bool_nan_c1 = np.isnan(c1)
+
+    mask_invalid = np.logical_or(bool_nan_c0,
+                                 bool_nan_c1)
+    mask_valid = ~mask_invalid
+    return mask_valid
+
+
+def population_vector_correlation(rmaps1, rmaps2, min_rate=None):
     """
     Calcualte population vector correlation between two
     stacks of rate maps.
@@ -192,11 +218,10 @@ def pvcorr(rmaps1, rmaps2, min_rate=None):
     Array of the shape [n_units, n_bins_dim1, n_bins_dim2]
     rmaps2 : ndarray
     Array of the shape [n_units, n_bins_dim1, n_bins_dim2]
-    min_rate : float
-    "Cells with firing below 1 Hz in all x-y bins of the
-     two sessions that were compared were excluded from
-     the population vectors before calculating the
-     correlation coefficients" Mankin et al, Neuron, 2016
+    min_rate : {float, None}
+    If float, units are excluded if firing rate does not
+    equals or exceeds minimal rate in any of the x-y bins
+    of stack1 or stack2.
 
     Returns
     -------
@@ -215,22 +240,28 @@ def pvcorr(rmaps1, rmaps2, min_rate=None):
     # correlation coefficient requires at least 2x2 values
     assert rmaps1.shape[0] > 1
 
-    id_include = np.ones(rmaps1.shape[0], dtype=bool)
-    
     if min_rate:
-        for i in range(rmaps1.shape[0]):
-            # get all rates
-            max1 = np.max(rmaps1[i, :, :])
-            max2 = np.max(rmaps2[i, :, :])
-            if max1 < min_rate or max2 < min_rate:
-                id_include[i] = False
+        max1 = _max_of_planes_in_cube(rmaps1)
+        max2 = _max_of_planes_in_cube(rmaps2)
+        id_include = np.logical_or(max1 >= min_rate, max2 >= min_rate)
+    else:
+        id_include = np.ones(rmaps1.shape[0], dtype=bool)
 
     corr_coeff = np.zeros((bins_x, bins_y))
+    corr_coeff[:] = np.nan
+    
+    # create mask. exclude value if nan in any of the two stacks
+    mask_valid = _mask_in_both_if_any_is_nan(rmaps1, rmaps2)
+    
     for i in range(bins_x):
         for j in range(bins_y):
             xy1 = rmaps1[id_include, i, j]
             xy2 = rmaps2[id_include, i, j]
-            corr_coeff[i, j] = np.corrcoef(
-                xy1, xy2)[0, 1]
+            msk = mask_valid[:, i, j]
+            # just evaluate correlation if there are any values
+            if np.sum(msk) > 2:
+                corr_coeff[i, j] = np.corrcoef(
+                    xy1[msk],
+                    xy2[msk])[0, 1]
     pop_vec_corr = np.nanmean(corr_coeff)
     return pop_vec_corr
