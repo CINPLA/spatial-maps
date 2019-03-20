@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 import pdb
+import copy
 
 def test_calc_population_vector_correlation():
     from spatial_maps.stats import population_vector_correlation as pvcorr
@@ -34,18 +35,6 @@ def test_calc_population_vector_correlation():
     err = pv-1
     assert err < 10e-5
     
-    
-def test_max_of_planes_in_cube():
-    from spatial_maps.stats import _max_of_planes_in_cube as mpc
-    
-    c = np.arange(0, 18, 1.)
-    c = c.reshape([2, 3, 3])
-
-    c[0, 2, 2] = np.nan
-
-    max_s0 = mpc(c)
-    assert np.array_equal(max_s0, np.array([7, 17]))
-
 
 def test_mask_in_both_if_any_is_nan():
     from spatial_maps.stats import _mask_in_both_if_any_is_nan as mask

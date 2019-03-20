@@ -1,6 +1,7 @@
 import numpy as np
 import pdb
 import numpy.ma as ma
+import copy
 
 
 def _inf_rate(rate_map, px):
@@ -182,15 +183,6 @@ def prob_dist_1d(x, bins):
     H, _ = np.histogram(x, bins=bins, normed=False)
     return (H / len(x)).T
 
-def _max_of_planes_in_cube(c):
-    """
-    Given a cube of shape [s0, s1, s2], find the maximum of
-    each plane s0i of shape [s1, s2]
-    """
-    max_ax1 = np.nanmax(c, axis=1)
-    max_ax12 = np.nanmax(max_ax1, axis=1)
-
-    return max_ax12
 
 def _mask_in_both_if_any_is_nan(c0, c1):
     """
@@ -218,17 +210,12 @@ def population_vector_correlation(rmaps1, rmaps2, min_rate=None):
     Array of the shape [n_units, n_bins_dim1, n_bins_dim2]
     rmaps2 : ndarray
     Array of the shape [n_units, n_bins_dim1, n_bins_dim2]
-    min_rate : {float, None}
-    If float, units are excluded if firing rate does not
-    equals or exceeds minimal rate in any of the x-y bins
-    of stack1 or stack2.
 
     Returns
     -------
     pop_vec_corr : float
     Population vector correlation
     """
-
     # make is float
     rmaps1 = rmaps1.astype(float)
     rmaps2 = rmaps2.astype(float)
@@ -240,13 +227,6 @@ def population_vector_correlation(rmaps1, rmaps2, min_rate=None):
     # correlation coefficient requires at least 2x2 values
     assert rmaps1.shape[0] > 1
 
-    if min_rate:
-        max1 = _max_of_planes_in_cube(rmaps1)
-        max2 = _max_of_planes_in_cube(rmaps2)
-        id_include = np.logical_or(max1 >= min_rate, max2 >= min_rate)
-    else:
-        id_include = np.ones(rmaps1.shape[0], dtype=bool)
-
     corr_coeff = np.zeros((bins_x, bins_y))
     corr_coeff[:] = np.nan
     
@@ -257,11 +237,12 @@ def population_vector_correlation(rmaps1, rmaps2, min_rate=None):
         for j in range(bins_y):
             xy1 = rmaps1[id_include, i, j]
             xy2 = rmaps2[id_include, i, j]
-            msk = mask_valid[:, i, j]
+            msk = mask_valid[id_include, i, j]
             # just evaluate correlation if there are any values
             if np.sum(msk) > 2:
                 corr_coeff[i, j] = np.corrcoef(
                     xy1[msk],
                     xy2[msk])[0, 1]
+
     pop_vec_corr = np.nanmean(corr_coeff)
     return pop_vec_corr
