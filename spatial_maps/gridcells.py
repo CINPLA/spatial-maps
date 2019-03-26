@@ -4,6 +4,32 @@ from spatial_maps.fields import find_peaks
 
 
 def separate_fields_from_distance(rate_map):
+    raise DeprecationWarning("separate_fields_from_distance is renamed to separate_fields_by_distance")
+    return separate_fields_by_distance(rate_map)
+
+
+def separate_fields_by_distance(rate_map):
+    """
+    Identifies fields in a smoothed rate map.
+    This method first finds the distance between the center peak and the nearest peak and defines
+    that as a global field radius. 
+    The global field radius is subsequently multiplied by two and compared to the distances between
+    all pairs of peaks in the smoothed rate map.
+    For each pair that has a distance smaller than two times the global field radius,
+    the peak with the largest value is kept, while the other peak is removed.
+
+    Parameters
+    ----------
+    rate_map : numpy.ndarray
+        smoothed rate map
+
+    Returns
+    -------
+    (rate_map_maxima, global_field_radius) : (list, float)
+        tuple where the first element is a list of the coordinates of the detected fields
+        and the second element is the global field radius
+    ---
+    """
     import scipy.spatial as spatial
 
     acorr = autocorrelation(rate_map, mode='full', normalize=True)
