@@ -26,7 +26,7 @@ def _adjust_bin_size(box_size, bin_size=None, bin_count=None):
     return box_size, bin_size
 
 
-def _make_bins(box_size, bin_size, bin_count):
+def _make_bins(box_size, bin_size, bin_count=None):
     box_size, bin_size = _adjust_bin_size(box_size, bin_size, bin_count)
     xbins = np.arange(0, box_size[0] + bin_size[0], bin_size[0])
     ybins = np.arange(0, box_size[1] + bin_size[1], bin_size[1])
