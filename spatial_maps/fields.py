@@ -25,7 +25,7 @@ def find_peaks(image):
     return peaks
 
 
-def separate_fields_from_laplace(rate_map, threshold=0):
+def separate_fields_by_laplace(rate_map, threshold=0):
     """Separates fields using the laplacian to identify fields separated by
     a negative second derivative.
     Parameters
