@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from spatial_maps import SpatialMap
 import quantities as pq
-from tools import make_test_grid_rate_map, make_test_spike_map
+from spatial_maps.tools import make_test_grid_rate_map, make_test_spike_map
 from spatial_maps.gridcells import (
     gridness, spacing_and_orientation, separate_fields_by_distance)
 

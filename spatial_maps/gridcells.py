@@ -229,7 +229,7 @@ def autocorrelation_centers(rate_map, threshold=0, center_method='maxima'):
     # autocorrelate. Returns array (2x - 1) the size of rate_map
     acorr = fftcorrelate2d(
         rate_map, rate_map, mode='full', normalize=True)
-    fields = separate_fields_from_laplace(rate_map, threshold=threshold)
+    fields = separate_fields_by_laplace(rate_map, threshold=threshold)
 
     field_centers = calculate_field_centers(
         rate_map, fields, center_method=center_method)

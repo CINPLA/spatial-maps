@@ -2,25 +2,29 @@ import numpy as np
 import pytest
 from spatial_maps.maps import SpatialMap
 import quantities as pq
-from tools import make_test_grid_rate_map, make_test_spike_map
+from spatial_maps.tools import make_test_grid_rate_map, make_test_spike_map
 
 
 def test_rate_map():
     box_size = [1., 1.]
     rate = 5.
     bin_size = [.01, .01]
-    n_step=10**6
-    step_size=.01
+    n_step=10**4
+    step_size=.1
+    sigma=0.1
+    spacing=0.3
+    smoothing = .03
 
     rate_map_true, pos_fields, xbins, ybins = make_test_grid_rate_map(
-        sigma=0.05, spacing=0.3, amplitude=rate, offset=0, box_size=box_size,
+        sigma=sigma, spacing=spacing, amplitude=rate, box_size=box_size,
         bin_size=bin_size)
 
     x, y, t, spikes = make_test_spike_map(
-        pos_fields, box_size, bin_size, rate, n_step=n_step, step_size=step_size)
+        pos_fields=pos_fields, box_size=box_size, rate=rate,
+        n_step=n_step, step_size=step_size, sigma=sigma)
     smap = SpatialMap(
         x, y, t, spikes, box_size=box_size, bin_size=bin_size)
-    rate_map = smap.rate_map(.03)
+    rate_map = smap.rate_map(smoothing)
 
     diff = rate_map_true - rate_map
     X, Y = np.meshgrid(xbins, ybins)
@@ -29,8 +33,7 @@ def test_rate_map():
     for p in pos_fields:
         mask = np.sqrt((X - p[0])**2 + (Y - p[1])**2) < .1
         samples.append(diff[mask])
-
-    peak_diff = np.abs(np.mean([s.max() for s in samples]))
+    peak_diff = np.abs(np.mean([s.min() for s in samples if s.size > 0]))
     assert peak_diff < 0.5
 
 
