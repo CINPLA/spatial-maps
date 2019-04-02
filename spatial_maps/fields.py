@@ -104,8 +104,8 @@ def border_score(rate_map, fields):
         in rate_map. See output of separate_fields
     References
     ----------
-    [1]: Geoffrey W. Diehl, Olivia J. Hon, Stefan Leutgeb, Jill K. Leutgeb, https://doi.org/10.1016/j.neuron.2017.03.004
-
+    [1]: Geoffrey W. Diehl, Olivia J. Hon, Stefan Leutgeb, Jill K. Leutgeb,
+    https://doi.org/10.1016/j.neuron.2017.03.004
     """
     from scipy.ndimage import labeled_comprehension
 
@@ -122,7 +122,7 @@ def border_score(rate_map, fields):
     ones = np.ones_like(rate_map)
 
     for i in range(4):
-        borders = np.logical_and(fields>0, wall)
+        borders = np.logical_and(fields > 0, wall)
         extents = labeled_comprehension(
             input=borders, labels=fields, index=None, func=np.sum,
             out_dtype=np.int64, default=0)
