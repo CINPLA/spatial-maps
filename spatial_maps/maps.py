@@ -26,8 +26,7 @@ def _adjust_bin_size(box_size, bin_size=None, bin_count=None):
     return box_size, bin_size
 
 
-def _make_bins(box_size, bin_size, bin_count=None):
-    box_size, bin_size = _adjust_bin_size(box_size, bin_size, bin_count)
+def _make_bins(box_size, bin_size):
     xbins = np.arange(0, box_size[0] + bin_size[0], bin_size[0])
     ybins = np.arange(0, box_size[1] + bin_size[1], bin_size[1])
     return xbins, ybins
@@ -57,7 +56,8 @@ def _spike_map(x, y, t, spike_times, xbins, ybins):
 
 class SpatialMap:
     def __init__(self, x, y, t, spike_times, box_size, bin_size, bin_count=None):
-        xbins, ybins = _make_bins(box_size, bin_size, bin_count)
+        box_size, bin_size = _adjust_bin_size(box_size, bin_size, bin_count)
+        xbins, ybins = _make_bins(box_size, bin_size)
         self.spike_pos = _spike_map(x, y, t, spike_times, xbins, ybins)
         self.time_pos = _occupancy_map(x, y, t, xbins, ybins)
         assert all(self.spike_pos[self.time_pos == 0] == 0)
