@@ -3,7 +3,7 @@ import numpy as np
 
 def autocorrelation(rate_map, mode='full', normalize=True):
     return fftcorrelate2d(rate_map, rate_map, mode=mode, normalize=normalize)
-    
+
 
 def fftcorrelate2d(arr1, arr2, mode='full', normalize=False):
     """
@@ -147,3 +147,126 @@ def fit_gauss_asym(data, p0 = None, return_data=True):
         return popt, data_fitted.reshape(sx,sy)
     else:
         return popt
+
+
+def stationary_poisson(t_start, t_stop, rate):
+    """
+    Stationary Poisson process
+    Parameters
+    ----------
+    t_start : float
+        Start time of the process (lower bound).
+    t_stop : float
+        Stop time of the process (upper bound).
+    rate : float
+        rate of the Poisson process
+    Returns
+    -------
+    events : array
+        time points from a Poisson process with rate rate.
+    """
+    n_exp = rate * (t_stop - t_start)
+    return np.sort(
+        np.random.uniform(
+            t_start, t_stop, np.random.poisson(n_exp)))
+
+
+def make_test_grid_rate_map(
+    box_size, bin_size, sigma=0.05, spacing=0.3, amplitude=1., repeat=2,
+    orientation=0, offset=0):
+    box_size = np.array(box_size)
+    xbins = np.arange(0, box_size[0], bin_size[0])
+    ybins = np.arange(0, box_size[1], bin_size[1])
+    x,y = np.meshgrid(xbins, ybins)
+
+    p0 = np.array([box_size[0] / 2, box_size[1] / 2]) + offset
+    pos = [p0]
+    angles = np.linspace(0, 2 * np.pi, 7)[:-1]  + orientation
+
+    rate_map = np.zeros_like(x)
+    rate_map += gaussian2D(amplitude, x, y, *p0, sigma)
+
+    def add_hex(p0, pos, rate_map):
+        for i, a in enumerate(angles):
+            p = p0 + [spacing * f(a) for f in [np.cos, np.sin]]
+            if not np.isclose(p, pos).prod(axis=1).any() and all(p <= box_size + sigma):
+                rate_map += gaussian2D(amplitude, x, y, *p, sigma)
+                pos = np.vstack((pos, p))
+        return pos, rate_map
+
+    pos, rate_map = add_hex(p0, pos, rate_map)
+    for _ in range(repeat):
+        pos_1 = pos.copy()
+        for p1 in pos_1:
+            pos, rate_map = add_hex(p1, pos, rate_map)
+
+    return rate_map, np.array(pos), xbins, ybins
+
+
+def make_test_border_map(
+    box_size, bin_size, sigma=0.05, amplitude=1., offset=0):
+
+    xbins = np.arange(0, box_size[0], bin_size[0])
+    ybins = np.arange(0, box_size[1], bin_size[1])
+    x,y = np.meshgrid(xbins, ybins)
+
+    p0 = np.array((box_size[0], box_size[1] / 2)) + offset
+    pos = [p0]
+
+    angles = np.linspace(0, 2 * np.pi, 7)[:-1]
+
+    rate_map = np.zeros_like(x)
+    rate_map += gaussian2D(amplitude, x, y, *p0, sigma)
+
+    return rate_map, np.array(pos), xbins, ybins
+
+
+def random_walk(box_size, step_size, n_step, sampling_rate, low_pass=5):
+    import scipy.signal as ss
+    # edited from https://stackoverflow.com/questions/48777345/vectorized-random-walk-in-python-with-boundaries
+    start = np.array([0, 0])
+    directions = np.array([(i,j) for i in [-1,0,1] for j in [-1,0,1]])
+    boundaries = np.array([(0, box_size[0]), (0, box_size[1])])
+    size = np.diff(boundaries, axis=1).ravel()
+    # "simulation"
+    trajectory = np.cumsum(
+        directions[np.random.randint(0, 9, (n_step,))] * step_size, axis=0)
+    x, y = (
+        np.abs((trajectory + start - boundaries[:, 0] + size) % (2 * size) - size)
+        + boundaries[:, 0]).T
+
+    b, a = ss.butter(N=1, Wn=low_pass * 2 / sampling_rate)
+    # zero phase shift filter
+    x = ss.filtfilt(b, a, x)
+    y = ss.filtfilt(b, a, y)
+    # we tolerate small interpolation errors
+    x[(x > -1e-3) & (x < 0.0)] = 0.0
+    y[(y > -1e-3) & (y < 0.0)] = 0.0
+
+    return x, y
+
+
+def make_test_spike_map(
+    rate, sigma, pos_fields, box_size, n_step=10**4, step_size=.05):
+    from scipy.interpolate import interp1d
+
+    def infield(pos, pos_fields):
+        dist = np.sqrt(np.sum((pos - pos_fields)**2, axis=1))
+        if any(dist <= sigma):
+            return True
+        else:
+            return False
+
+    t = np.linspace(0, n_step * step_size / 1.5, n_step) # s / max_speed
+    x, y = random_walk(
+        box_size, step_size, n_step, sampling_rate=1 / (t[1] - t[0]))
+
+    st = stationary_poisson(
+        rate=rate, t_start=0, t_stop=t[-1])
+
+    spike_pos = np.array([interp1d(t, x)(st), interp1d(t, y)(st)])
+
+    spikes = [times for times, pos in zip(st, spike_pos.T)
+              if infield(pos, pos_fields)]
+
+    return np.array(x), np.array(y), np.array(t), np.array(spikes)
