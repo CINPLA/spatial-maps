@@ -18,7 +18,7 @@ def test_find_peaks():
         sigma=sigma, spacing=spacing, amplitude=rate, offset=0, box_size=box_size,
         bin_size=bin_size, repeat=0)
     peaks = find_peaks(rate_map)
-    pos_peaks = np.array([xbins[peaks[:,0]], ybins[peaks[:,1]]]).T
+    pos_peaks = np.array([xbins[peaks[:,1]], ybins[peaks[:,0]]]).T
     print(pos_peaks)
     assert all(
         [np.isclose(p, pos_peaks, rtol=1e-3).prod(axis=1).any()

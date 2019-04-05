@@ -12,7 +12,7 @@ def separate_fields_by_distance(rate_map):
     """
     Identifies fields in a smoothed rate map.
     This method first finds the distance between the center peak and the nearest peak and defines
-    that as a global field radius. 
+    that as a global field radius.
     The global field radius is subsequently multiplied by two and compared to the distances between
     all pairs of peaks in the smoothed rate map.
     For each pair that has a distance smaller than two times the global field radius,

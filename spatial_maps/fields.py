@@ -6,7 +6,11 @@ from .tools import fftcorrelate2d, autocorrelation
 
 def find_peaks(image):
     """
-    Returns peaks sorted by distance from center of image.
+    Find peaks sorted by distance from center of image.
+    Returns
+    -------
+    peaks : array
+        coordinates for peaks in image as [row, column]
     """
     image = image.copy()
     image[~np.isfinite(image)] = 0
@@ -15,13 +19,10 @@ def find_peaks(image):
     labels, num_objects = ndimage.label(is_maxima)
     indices = np.arange(1, num_objects+1)
     peaks = ndimage.maximum_position(image, labels=labels, index=indices)
-    # if len(peaks) == 0:
-    #     return None
     peaks = np.array(peaks)
     center = np.array(image.shape) / 2
     distances = np.linalg.norm(peaks - center, axis=1)
     peaks = peaks[distances.argsort()]
-    peaks[:,[0, 1]] = peaks[:,[1, 0]] # y, x -> x, y
     return peaks
 
 
