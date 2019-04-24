@@ -8,7 +8,7 @@ def separate_fields_from_distance(rate_map):
     return separate_fields_by_distance(rate_map)
 
 
-def separate_fields_by_distance(rate_map):
+def separate_fields_by_distance(rate_map, factor=0.7):
     """
     Identifies fields in a smoothed rate map.
     This method first finds the distance between the center peak and the nearest peak and defines
@@ -22,7 +22,9 @@ def separate_fields_by_distance(rate_map):
     ----------
     rate_map : numpy.ndarray
         smoothed rate map
-
+    factor : float
+        factor of min distance to be removed, defaults to 0.7 because that
+        is what Ismakov et al. used
     Returns
     -------
     (rate_map_maxima, global_field_radius) : (list, float)
@@ -41,8 +43,7 @@ def separate_fields_by_distance(rate_map):
         distances = np.linalg.norm(maxima - center, axis=1)
         distances_sorted = sorted(distances)
         min_distance = distances_sorted[1] # the first one is basically the center
-        # TODO consider a different factor than 0.7
-        return 0.7 * min_distance / 2 # 0.7 because that is what Ismakov et al. used
+        return factor * min_distance / 2
 
     # TODO verify this for an example where there are fields too close
     def too_close_removed(rate_map, rate_map_maxima, place_field_radius):
