@@ -23,7 +23,7 @@ def separate_fields_by_distance(rate_map, factor=0.7):
     rate_map : numpy.ndarray
         smoothed rate map
     factor : float
-        factor of min distance to be removed, defaults to 0.7 0.7 because that
+        factor of min distance to be removed, defaults to 0.7 because that
         is what Ismakov et al. used
     Returns
     -------
@@ -43,8 +43,7 @@ def separate_fields_by_distance(rate_map, factor=0.7):
         distances = np.linalg.norm(maxima - center, axis=1)
         distances_sorted = sorted(distances)
         min_distance = distances_sorted[1] # the first one is basically the center
-        # TODO consider a different factor than 0.7
-        return factor * min_distance / 2 # 0.7 because that is what Ismakov et al. used
+        return factor * min_distance / 2
 
     # TODO verify this for an example where there are fields too close
     def too_close_removed(rate_map, rate_map_maxima, place_field_radius):
