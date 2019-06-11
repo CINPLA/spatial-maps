@@ -11,6 +11,8 @@ def find_peaks(image):
     -------
     peaks : array
         coordinates for peaks in image as [row, column]
+    :Authors:
+        Halvard Sutterud <halvard.sutterud@gmail.com>
     """
     image = image.copy()
     image[~np.isfinite(image)] = 0
@@ -45,6 +47,8 @@ def separate_fields_by_laplace(rate_map, threshold=0):
         field (sum of all field values) with 0 elsewhere.
     field_count : int
         field count
+    :Authors:
+        Halvard Sutterud <halvard.sutterud@gmail.com>
     """
     from scipy import ndimage
 
@@ -74,7 +78,10 @@ def separate_fields_by_laplace(rate_map, threshold=0):
 
 
 def calculate_field_centers(rate_map, labels, center_method='maxima'):
-    """Finds center of fields at labels."""
+    """Finds center of fields at labels.
+    :Authors:
+        Halvard Sutterud <halvard.sutterud@gmail.com>
+    """
 
     from scipy import ndimage
     indices = np.arange(1, np.max(labels) + 1)
@@ -107,6 +114,8 @@ def border_score(rate_map, fields):
     ----------
     [1]: Geoffrey W. Diehl, Olivia J. Hon, Stefan Leutgeb, Jill K. Leutgeb,
     https://doi.org/10.1016/j.neuron.2017.03.004
+    :Authors:
+        Halvard Sutterud <halvard.sutterud@gmail.com>
     """
     from scipy.ndimage import labeled_comprehension
 
