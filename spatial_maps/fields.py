@@ -144,3 +144,40 @@ def border_score(rate_map, fields):
     d_m = np.average(dist_to_nearest_wall, weights=rate_map)
     b = (C_M - d_m) / (C_M + d_m)
     return b
+
+
+def in_field(x, y, field, box_xlen, box_ylen):
+    """Returns which spatial field each (x,y)-position is in. 
+
+    Parameters:
+    -----------
+    x : numpy array
+    y : numpy array, len(y) == len(x)
+    field : numpy nd array 
+        labeled fields, where each field is defined by an area separated by
+        zeros. The fields are labeled with indices from [1:].
+    box_xlen, box_ylen : floats
+        extents of arena
+
+    Returns:
+    --------
+    indices : numpy array, length = len(x)
+        arraylike x and y with field-labeled indices
+    """
+
+    if len(x)!= len(y):
+        raise ValueError('x and y must have same length')
+
+    sx,sy   = field.shape
+    # bin sizes
+    dx      = box_xlen/sx
+    dy      = box_ylen/sy
+    x_bins  = dx + np.arange(0, box_xlen, dx) 
+    y_bins  = dy + np.arange(0, box_ylen, dy) 
+    ix      = np.digitize(x, x_bins) 
+    iy      = np.digitize(y, y_bins)
+
+    # fix for boundaries:
+    ix[ix==sx] = sx-1
+    iy[iy==sy] = sy-1
+    return np.array(field[ix,iy])
