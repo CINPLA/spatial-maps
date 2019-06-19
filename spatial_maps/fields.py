@@ -146,7 +146,7 @@ def border_score(rate_map, fields):
     return b
 
 
-def in_field(x, y, field, box_xlen, box_ylen):
+def in_field(x, y, field, box_size):
     """Returns which spatial field each (x,y)-position is in. 
 
     Parameters:
@@ -156,7 +156,7 @@ def in_field(x, y, field, box_xlen, box_ylen):
     field : numpy nd array 
         labeled fields, where each field is defined by an area separated by
         zeros. The fields are labeled with indices from [1:].
-    box_xlen, box_ylen : floats
+    box_size: list of two floats
         extents of arena
 
     Returns:
@@ -170,10 +170,10 @@ def in_field(x, y, field, box_xlen, box_ylen):
 
     sx,sy   = field.shape
     # bin sizes
-    dx      = box_xlen/sx
-    dy      = box_ylen/sy
-    x_bins  = dx + np.arange(0, box_xlen, dx) 
-    y_bins  = dy + np.arange(0, box_ylen, dy) 
+    dx      = box_size[0]/sx
+    dy      = box_size[1]/sy
+    x_bins  = dx + np.arange(0, box_size[0], dx) 
+    y_bins  = dy + np.arange(0, box_size[1], dy) 
     ix      = np.digitize(x, x_bins) 
     iy      = np.digitize(y, y_bins)
 
