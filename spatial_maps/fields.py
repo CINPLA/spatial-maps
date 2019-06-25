@@ -200,17 +200,12 @@ def distance_to_edge_function(
     box_dim = np.array([box_xlen, box_ylen])
     edge_x, edge_y = (contours[0]*box_dim/(np.array(field.shape)-(1,1))).T 
 
-    import matplotlib.pyplot as plt
-
     # # angle between 0 and 2\pi
     angles = np.arctan2((edge_y-y_c), (edge_x-x_c))%(2*np.pi) 
     a_sort = np.argsort(angles)
     angles = angles[a_sort]
     edge_x = edge_x[a_sort]
     edge_y = edge_y[a_sort]
-
-    m= plt.scatter(edge_x, edge_y,c=angles/2*np.pi)
-    plt.colorbar(m)
 
     # # Fill in edge values for the interpolation
     pad_a = np.pad(angles, 2, mode='linear_ramp', end_values=(0,2*np.pi))
