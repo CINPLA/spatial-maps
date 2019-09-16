@@ -158,7 +158,7 @@ def prob_dist(x, y, bins):
     '''
 
     H, _, _ = np.histogram2d(x, y, bins=bins, normed=False)
-    return (H / len(x)).T
+    return (H / len(x))
 
 
 def prob_dist_1d(x, bins):

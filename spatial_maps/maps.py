@@ -1,5 +1,6 @@
 import numpy as np
 from astropy.convolution import Gaussian2DKernel, convolve_fft
+from copy import copy
 
 
 def _adjust_bin_size(box_size, bin_size=None, bin_count=None):
@@ -42,7 +43,7 @@ def _occupancy_map(x, y, t, xbins, ybins):
     t_ = np.append(t, t[-1] + np.median(np.diff(t)))
     time_in_bin = np.diff(t_)
     values, _, _ = np.histogram2d(
-        y, x, bins=[xbins, ybins], weights=time_in_bin)
+        x, y, bins=[xbins, ybins], weights=time_in_bin)
     return values
 
 
@@ -50,7 +51,7 @@ def _spike_map(x, y, t, spike_times, xbins, ybins):
     t_ = np.append(t, t[-1] + np.median(np.diff(t)))
     spikes_in_bin, _ = np.histogram(spike_times, t_)
     values, _, _ = np.histogram2d(
-        y, x, bins=[xbins, ybins], weights=spikes_in_bin)
+        x, y, bins=[xbins, ybins], weights=spikes_in_bin)
     return values
 
 
@@ -64,6 +65,8 @@ class SpatialMap:
 
         self.bin_size = bin_size
         self.box_size = box_size
+        self.xbins = xbins
+        self.ybins = ybins
 
     def spike_map(self, smoothing):
         if smoothing == 0.0:
@@ -78,11 +81,19 @@ class SpatialMap:
         return smooth_map(self.time_pos, self.bin_size, smoothing)
 
     def rate_map(self, smoothing, mask_zero_occupancy=False):
-        spike_map = self.spike_map(smoothing)
-        occupancy_map = self.occupancy_map(smoothing)
+        spike_map = self.spike_map(smoothing=0)
+        occupancy_map = self.occupancy_map(smoothing=0)
         if mask_zero_occupancy:
             # to avoid infinity (x/0) we set zero occupancy to nan
             # this can be handy when analyzing low occupancy maps
-            occupancy_map[self.time_pos == 0] = np.nan
-        rate_map = spike_map / occupancy_map
+            ocmap = copy(occupancy_map)
+            ocmap[self.time_pos == 0] = np.nan
+            rate_map = spike_map / ocmap
+            rate_map = smooth_map(rate_map, self.bin_size, smoothing)
+            rate_map[self.time_pos == 0] = np.nan
+        else:
+            rate_map = spike_map / occupancy_map
+            rate_map[np.isinf(rate_map)] = 0
+            rate_map[np.isnan(rate_map)] = 0
+            rate_map = smooth_map(rate_map, self.bin_size, smoothing)
         return rate_map
