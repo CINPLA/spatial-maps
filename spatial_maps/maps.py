@@ -33,10 +33,10 @@ def _make_bins(box_size, bin_size):
     return xbins, ybins
 
 
-def smooth_map(rate_map, bin_size, smoothing):
+def smooth_map(rate_map, bin_size, smoothing, **kwargs):
     std_dev_pixels = smoothing / bin_size
     kernel = Gaussian2DKernel(std_dev_pixels[0], std_dev_pixels[1])
-    return convolve_fft(rate_map, kernel)
+    return convolve_fft(rate_map, kernel, **kwargs)
 
 
 def _occupancy_map(x, y, t, xbins, ybins):
@@ -68,32 +68,37 @@ class SpatialMap:
         self.xbins = xbins
         self.ybins = ybins
 
-    def spike_map(self, smoothing):
+    def spike_map(self, smoothing, mask_zero_occupancy=False, **kwargs):
         if smoothing == 0.0:
-            return self.spike_pos
+            spmap = copy(self.spike_pos)
+        else:
+            spmap = smooth_map(self.spike_pos, self.bin_size, smoothing, **kwargs)
 
-        return smooth_map(self.spike_pos, self.bin_size, smoothing)
+        if mask_zero_occupancy:
+            spmap[self.time_pos == 0] = np.nan
 
-    def occupancy_map(self, smoothing):
+        return spmap
+
+    def occupancy_map(self, smoothing, mask_zero_occupancy=False, **kwargs):
         if smoothing == 0.0:
-            return self.time_pos
+            ocmap = copy(self.time_pos)
+        else:
+            ocmap = smooth_map(self.time_pos, self.bin_size, smoothing, **kwargs)
 
-        return smooth_map(self.time_pos, self.bin_size, smoothing)
+        if mask_zero_occupancy:
+            ocmap[self.time_pos == 0] = np.nan
 
-    def rate_map(self, smoothing, mask_zero_occupancy=False):
-        spike_map = self.spike_map(smoothing=0)
-        occupancy_map = self.occupancy_map(smoothing=0)
+        return ocmap
+
+    def rate_map(self, smoothing, mask_zero_occupancy=False, **kwargs):
+        spike_map = self.spike_map(smoothing=smoothing, **kwargs)
+        occupancy_map = self.occupancy_map(smoothing=smoothing,  **kwargs)
         if mask_zero_occupancy:
             # to avoid infinity (x/0) we set zero occupancy to nan
             # this can be handy when analyzing low occupancy maps
-            ocmap = copy(occupancy_map)
-            ocmap[self.time_pos == 0] = np.nan
-            rate_map = spike_map / ocmap
-            rate_map = smooth_map(rate_map, self.bin_size, smoothing)
+            rate_map = spike_map / occupancy_map
             rate_map[self.time_pos == 0] = np.nan
         else:
             rate_map = spike_map / occupancy_map
             rate_map[np.isinf(rate_map)] = 0
-            rate_map[np.isnan(rate_map)] = 0
-            rate_map = smooth_map(rate_map, self.bin_size, smoothing)
         return rate_map

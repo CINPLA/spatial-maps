@@ -26,7 +26,7 @@ def find_peaks(image):
     return peaks
 
 
-def separate_fields_by_laplace(rate_map, threshold=0):
+def separate_fields_by_laplace(rate_map, threshold=0, minimum_field_size=None):
     """Separates fields using the laplacian to identify fields separated by
     a negative second derivative.
     Parameters
@@ -37,14 +37,14 @@ def separate_fields_by_laplace(rate_map, threshold=0):
         value of laplacian to separate fields by relative to the minima. Should be
         on the interval 0 to 1, where 0 cuts off at 0 and 1 cuts off at
         min(laplace(rate_map)). Default 0.
+    minimum_field_size: int
+        minimum number of bins to consider it a field. Default None (all fields are kept)
     Returns
     -------
     labels : numpy array, shape like rate_map.
         contains areas all filled with same value, corresponding to fields
         in rate_map. The fill values are in range(1,nFields + 1), sorted by size of the
         field (sum of all field values) with 0 elsewhere.
-    field_count : int
-        field count
     """
     from scipy import ndimage
 
@@ -69,7 +69,14 @@ def separate_fields_by_laplace(rate_map, threshold=0):
         new[fields == sort[i]+1] = i+1
 
     fields = new
+    if minimum_field_size is not None:
+        assert isinstance(minimum_field_size, (int, np.integer)), "'minimum_field_size' should be int"
 
+        labels, counts = np.unique(fields, return_counts=True)
+        for (lab, count) in zip(labels, counts):
+            if lab != 0:
+                if count < minimum_field_size:
+                    fields[fields == lab] = 0
     return fields
 
 
