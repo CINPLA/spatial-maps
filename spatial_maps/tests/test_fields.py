@@ -33,8 +33,8 @@ def test_separate_fields_by_laplace():
     spacing=0.3
 
     rate_map, pos_true, xbins, ybins = make_test_grid_rate_map(
-        sigma=sigma, spacing=spacing, amplitude=rate, offset=0, box_size=box_size,
-        bin_size=bin_size)
+        sigma=sigma, spacing=spacing, amplitude=rate, offset=0.1, box_size=box_size,
+        bin_size=bin_size, orientation=0.1)
 
     labels = separate_fields_by_laplace(rate_map, threshold=0)
     peaks = calculate_field_centers(rate_map, labels)
