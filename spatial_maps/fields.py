@@ -154,13 +154,13 @@ def border_score(rate_map, fields):
 
 
 def in_field(x, y, field, box_size):
-    """Returns which spatial field each (x,y)-position is in. 
+    """Returns which spatial field each (x,y)-position is in.
 
     Parameters:
     -----------
     x : numpy array
     y : numpy array, len(y) == len(x)
-    field : numpy nd array 
+    field : numpy nd array
         labeled fields, where each field is defined by an area separated by
         zeros. The fields are labeled with indices from [1:].
     box_size: list of two floats
@@ -179,9 +179,9 @@ def in_field(x, y, field, box_size):
     # bin sizes
     dx      = box_size[0]/sx
     dy      = box_size[1]/sy
-    x_bins  = dx + np.arange(0, box_size[0], dx) 
-    y_bins  = dy + np.arange(0, box_size[1], dy) 
-    ix      = np.digitize(x, x_bins) 
+    x_bins  = dx + np.arange(0, box_size[0], dx)
+    y_bins  = dy + np.arange(0, box_size[1], dy)
+    ix      = np.digitize(x, x_bins)
     iy      = np.digitize(y, y_bins)
 
     # fix for boundaries:
@@ -200,8 +200,7 @@ def crossings(field_indices):
     return cross
 
 
-def distance_to_edge_function(
-        x_c, y_c, field, box_xlen, box_ylen,interpolation = 'linear'):
+def distance_to_edge_function(x_c, y_c, field, box_size, interpolation='linear'):
     """Returns a function which for a given angle returns the distance to
     the edge of the field from the center.
     Parameters:
@@ -213,13 +212,13 @@ def distance_to_edge_function(
 
     from skimage import measure
     from scipy import interpolate
-    contours = measure.find_contours(field, 0.8) 
-    
-    box_dim = np.array([box_xlen, box_ylen])
-    edge_x, edge_y = (contours[0]*box_dim/(np.array(field.shape)-(1,1))).T 
+    contours = measure.find_contours(field, 0.8)
+
+    box_dim = np.array(box_size)
+    edge_x, edge_y = (contours[0]*box_dim/(np.array(field.shape)-(1,1))).T
 
     # # angle between 0 and 2\pi
-    angles = np.arctan2((edge_y-y_c), (edge_x-x_c))%(2*np.pi) 
+    angles = np.arctan2((edge_y-y_c), (edge_x-x_c))%(2*np.pi)
     a_sort = np.argsort(angles)
     angles = angles[a_sort]
     edge_x = edge_x[a_sort]
@@ -257,7 +256,7 @@ def map_pass_to_unit_circle(x,y,t, x_c, y_c, dist_func):
     is the average velocity vector of the pass, p is the vector from the
     position (x,y) to the center of the field and q is the vector from the
     center to the edge through (x,y). See [1].
-    
+
     Parameters:
     -----------
         :x, y, t: np arrays
@@ -283,7 +282,7 @@ def map_pass_to_unit_circle(x,y,t, x_c, y_c, dist_func):
     pos = np.array((x,y))
 
     # vector from pos to center p
-    p_vec = ((x_c,y_c) - pos.T).T 
+    p_vec = ((x_c,y_c) - pos.T).T
     # angle between x-axis and negative vector p
     angle = (np.arctan2(p_vec[1],p_vec[0]) + np.pi)%(2*np.pi)
     # distance from center to edge at each angle
@@ -303,4 +302,3 @@ def map_pass_to_unit_circle(x,y,t, x_c, y_c, dist_func):
     # is toward positive x
     theta = (angle - np.arctan2(v_vec[1],v_vec[0]))%(2*np.pi)
     return r, theta
-
