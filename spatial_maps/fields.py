@@ -11,8 +11,6 @@ def find_peaks(image):
     -------
     peaks : array
         coordinates for peaks in image as [row, column]
-    :Authors:
-        Halvard Sutterud <halvard.sutterud@gmail.com>
     """
     image = image.copy()
     image[~np.isfinite(image)] = 0
