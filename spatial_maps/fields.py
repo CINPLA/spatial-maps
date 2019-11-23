@@ -153,14 +153,14 @@ def border_score(rate_map, fields):
     return b
 
 
-def in_field(x, y, field, box_size):
+def in_field(x, y, fields, box_size):
     """Returns which spatial field each (x,y)-position is in.
 
     Parameters:
     -----------
     x : numpy array
     y : numpy array, len(y) == len(x)
-    field : numpy nd array
+    fields : numpy nd array
         labeled fields, where each field is defined by an area separated by
         zeros. The fields are labeled with indices from [1:].
     box_size: list of two floats
@@ -169,13 +169,13 @@ def in_field(x, y, field, box_size):
     Returns:
     --------
     indices : numpy array, length = len(x)
-        arraylike x and y with field-labeled indices
+        arraylike x and y with fields-labeled indices
     """
 
     if len(x)!= len(y):
         raise ValueError('x and y must have same length')
 
-    sx,sy   = field.shape
+    sx,sy   = fields.shape
     # bin sizes
     dx      = box_size[0]/sx
     dy      = box_size[1]/sy
@@ -187,7 +187,7 @@ def in_field(x, y, field, box_size):
     # fix for boundaries:
     ix[ix==sx] = sx-1
     iy[iy==sy] = sy-1
-    return np.array(field[ix,iy])
+    return np.array(fields[ix,iy])
 
 
 def crossings(field_indices):
@@ -215,23 +215,21 @@ def distance_to_edge_function(x_c, y_c, field, box_size, interpolation='linear')
     contours = measure.find_contours(field, 0.8)
 
     box_dim = np.array(box_size)
-    edge_x, edge_y = (contours[0]*box_dim/(np.array(field.shape)-(1,1))).T
+    edge_x, edge_y = (contours[0] * box_dim / (np.array(field.shape) - (1, 1))).T
 
     # # angle between 0 and 2\pi
-    angles = np.arctan2((edge_y-y_c), (edge_x-x_c))%(2*np.pi)
+    angles = np.arctan2((edge_y - y_c), (edge_x - x_c)) % (2 * np.pi)
     a_sort = np.argsort(angles)
     angles = angles[a_sort]
     edge_x = edge_x[a_sort]
     edge_y = edge_y[a_sort]
 
     # # Fill in edge values for the interpolation
-    pad_a = np.pad(angles, 2, mode='linear_ramp', end_values=(0,2*np.pi))
-    ev_x = (edge_x[0]+edge_x[-1])/2
-    pad_x = np.pad(edge_x, 2, mode = 'linear_ramp',
-            end_values=ev_x)
-    ev_y = (edge_y[0]+edge_y[-1])/2
-    pad_y = np.pad(edge_y, 2, mode = 'linear_ramp',
-            end_values=ev_y)
+    pad_a = np.pad(angles, 2, mode='linear_ramp', end_values=(0, 2 * np.pi))
+    ev_x = (edge_x[0] + edge_x[-1]) / 2
+    pad_x = np.pad(edge_x, 2, mode='linear_ramp', end_values=ev_x)
+    ev_y = (edge_y[0] + edge_y[-1]) / 2
+    pad_y = np.pad(edge_y, 2, mode='linear_ramp', end_values=ev_y)
 
     if interpolation=='cubic':
         mask = np.where(np.diff(pad_a) == 0)
@@ -239,19 +237,19 @@ def distance_to_edge_function(x_c, y_c, field, box_size, interpolation='linear')
         pad_x = np.delete(pad_x, mask)
         pad_y = np.delete(pad_y, mask)
 
-    x_func = interpolate.interp1d(pad_a,pad_x,kind=interpolation)
-    y_func = interpolate.interp1d(pad_a,pad_y,kind=interpolation)
+    x_func = interpolate.interp1d(pad_a, pad_x, kind=interpolation)
+    y_func = interpolate.interp1d(pad_a, pad_y, kind=interpolation)
 
     def dist_func(angle):
         x = x_func(angle)
         y = y_func(angle)
-        dist = np.sqrt((x-x_c)**2 + (y-y_c)**2)
+        dist = np.sqrt((x - x_c)**2 + (y - y_c)**2)
         return dist
 
     return dist_func
 
 
-def map_pass_to_unit_circle(x,y,t, x_c, y_c, dist_func):
+def map_pass_to_unit_circle(x, y, t, x_c, y_c, field=None, box_size=None, dist_func=None):
     """Uses three vectors {v,p,q} to map the passes to the unit circle. v
     is the average velocity vector of the pass, p is the vector from the
     position (x,y) to the center of the field and q is the vector from the
@@ -263,11 +261,16 @@ def map_pass_to_unit_circle(x,y,t, x_c, y_c, dist_func):
             should contain x,y and t data in numpy arrays
         :x_c , y_c: floats
             bump center
-        :field: np 2d array
+        :field: np 2d array (optional)
             bins indicating location of field.
-        :dist_func: function
+        :dist_func: function (optional)
             dist_func(angle) = distance to bump edge from center
+            default is distance_to_edge_function with linear interpolation
         :return_vecs(optional): bool, default False
+
+    See also:
+    ---------
+    distance_to_edge_function
 
     Returns:
     --------
@@ -279,26 +282,31 @@ def map_pass_to_unit_circle(x,y,t, x_c, y_c, dist_func):
         [1]: A. Jeewajee et. al., Theta phase precession of grid and
         placecell firing in open environment
     """
-    pos = np.array((x,y))
+    if dist_func is None:
+        assert field is not None and box_size is not None, (
+            'either provide "dist_func" or "field" and "box_size"')
+        dist_func= distance_to_edge_function(
+            x_c, y_c, field, box_size, interpolation='linear')
+    pos = np.array((x, y))
 
     # vector from pos to center p
-    p_vec = ((x_c,y_c) - pos.T).T
+    p_vec = ((x_c, y_c) - pos.T).T
     # angle between x-axis and negative vector p
-    angle = (np.arctan2(p_vec[1],p_vec[0]) + np.pi)%(2*np.pi)
+    angle = (np.arctan2(p_vec[1], p_vec[0]) + np.pi) % (2 * np.pi)
     # distance from center to edge at each angle
     q = dist_func(angle)
     # distance from center to pos
-    p = np.linalg.norm(p_vec,axis=0)
+    p = np.linalg.norm(p_vec, axis=0)
     # r-coordinate on unit circle
-    r = p/q
+    r = p / q
 
-    dpos = np.gradient(pos, axis = 1)
+    dpos = np.gradient(pos, axis=1)
     dt   = np.gradient(t)
-    vel  = np.divide(dpos,dt)
+    vel  = np.divide(dpos, dt)
 
     # mean velocity vector v
-    v_vec = np.average(vel,axis = 1)
+    v_vec = np.average(vel, axis=1)
     # angle on unit circle, run is rotated such that mean velocity vector
     # is toward positive x
-    theta = (angle - np.arctan2(v_vec[1],v_vec[0]))%(2*np.pi)
+    theta = (angle - np.arctan2(v_vec[1], v_vec[0])) % (2 * np.pi)
     return r, theta
