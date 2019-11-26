@@ -119,7 +119,7 @@ def test_map_pass_to_unit_circle():
     x = x_c + np.cos(theta)
     y = y_c + np.sin(theta)
 
-    r,angle = map_pass_to_unit_circle(x, y, t, x_c, y_c, dist_func=dist_func)
+    r, angle, _, _ = map_pass_to_unit_circle(x, y, t, x_c, y_c, dist_func=dist_func)
 
     assert np.all(np.isclose(angle, theta % (2 * np.pi)))
     assert np.all(np.isclose(1, r))

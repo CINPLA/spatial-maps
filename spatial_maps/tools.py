@@ -8,6 +8,8 @@ def autocorrelation(rate_map, mode='full', normalize=True):
 def fftcorrelate2d(arr1, arr2, mode='full', normalize=False):
     """
     Cross correlation of two 2 dimensional arrays using fftconvolve from scipy.
+    Here we exploit the fact that correlation is convolution with one input
+    rotated 180 degrees. See https://dsp.stackexchange.com/questions/12684/difference-between-correlation-and-convolution-on-an-image
     Parameters
     ----------
     arr1 : np.array

@@ -274,8 +274,10 @@ def map_pass_to_unit_circle(x, y, t, x_c, y_c, field=None, box_size=None, dist_f
 
     Returns:
     --------
-        r : arrays of distance to origin on unit circle
-        theta : arrays of angles to axis defined by mean velocity vector
+        r : array of distance to origin on unit circle
+        theta : array of angles to axis defined by mean velocity vector
+        pdcd : array of distance to peak projected onto the current direction
+        pdmd : array of distance to peak projected onto the mean direction
 
     References:
     -----------
@@ -301,12 +303,18 @@ def map_pass_to_unit_circle(x, y, t, x_c, y_c, field=None, box_size=None, dist_f
     r = p / q
 
     dpos = np.gradient(pos, axis=1)
-    dt   = np.gradient(t)
-    vel  = np.divide(dpos, dt)
+    dt = np.gradient(t)
+    velocity = np.divide(dpos, dt)
 
     # mean velocity vector v
-    v_vec = np.average(vel, axis=1)
+    mean_velocity = np.average(velocity, axis=1)
     # angle on unit circle, run is rotated such that mean velocity vector
     # is toward positive x
-    theta = (angle - np.arctan2(v_vec[1], v_vec[0])) % (2 * np.pi)
-    return r, theta
+    theta = (angle - np.arctan2(mean_velocity[1], mean_velocity[0])) % (2 * np.pi)
+
+    w_pdcd = (angle - np.arctan2(velocity[1], velocity[0]))
+    pdcd = r * np.cos(w_pdcd)
+
+    w_pdmd = (angle - np.arctan2(mean_velocity[1], mean_velocity[0]))
+    pdmd = r * np.cos(w_pdmd)
+    return r, theta, pdcd, pdmd
