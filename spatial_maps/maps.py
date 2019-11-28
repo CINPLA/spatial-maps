@@ -55,6 +55,23 @@ def _spike_map(x, y, t, spike_times, xbins, ybins):
     return values
 
 
+def interpolate_nan_2D(array, method='nearest'):
+    from scipy import interpolate
+    x = np.arange(0, array.shape[1])
+    y = np.arange(0, array.shape[0])
+    #mask invalid values
+    array = np.ma.masked_invalid(array)
+    xx, yy = np.meshgrid(x, y)
+    #get only the valid values
+    x1 = xx[~array.mask]
+    y1 = yy[~array.mask]
+    newarr = array[~array.mask]
+
+    return interpolate.griddata(
+        (x1, y1), newarr.ravel(), (xx, yy),
+         method=method, fill_value=0)
+
+
 class SpatialMap:
     def __init__(self, x, y, t, spike_times, box_size, bin_size, bin_count=None):
         box_size, bin_size = _adjust_bin_size(box_size, bin_size, bin_count)
@@ -79,25 +96,60 @@ class SpatialMap:
 
         return spmap
 
-    def occupancy_map(self, smoothing, mask_zero_occupancy=False, **kwargs):
-        if smoothing == 0.0:
-            ocmap = copy(self.time_pos)
-        else:
-            ocmap = smooth_map(self.time_pos, self.bin_size, smoothing, **kwargs)
+    def occupancy_map(self, smoothing, mask_zero_occupancy=False, threshold=None, **kwargs):
+        '''Compute occupancy map as a histogram of postition
+        weighted with time spent.
+        Parameters:
+        -----------
+        mask_zero_occupancy : bool
+            Set zero occupancy to nan
+        threshold : float
+            Set low occupancy times to zero as not to get spurious
+            large values in rate.
+
+        '''
+        ocmap = copy(self.time_pos)
+        if threshold is not None:
+            scmap[self.time_pos <= threshold] = 0
+        if smoothing > 0:
+            ocmap = smooth_map(ocmap, self.bin_size, smoothing, **kwargs)
 
         if mask_zero_occupancy:
             ocmap[self.time_pos == 0] = np.nan
 
         return ocmap
 
-    def rate_map(self, smoothing, mask_zero_occupancy=False, **kwargs):
+    def rate_map(self, smoothing, mask_zero_occupancy=False, interpolate_invalid=False, threshold=None, **kwargs):
+        '''Calculate rate map as spike_map / occupancy_map
+        Parameters
+        ----------
+        smoothing : float
+            Smoothing of spike_map and occupancy_map before division
+        mask_zero_occupancy : bool
+            Set pixels of zero occupancy to nan
+        interpolate_invalid : bool
+            Interpolate rate_map after division to remove invalid values,
+            if False, and mask_zero_occupancy is False,
+            invalid values are set to zero.
+        threshold : float
+            Low occupancy can produce spurious high rate, a threshold sets
+            occupancy below this to zero.
+        kwargs : key word arguments to scipy.interpolate, when smoothing > 0
+        Returns
+        -------
+        rate_map : array
+        '''
         spike_map = self.spike_map(smoothing=smoothing, **kwargs)
-        occupancy_map = self.occupancy_map(smoothing=smoothing,  **kwargs)
+        occupancy_map = self.occupancy_map(
+            smoothing=smoothing, threshold=threshold, **kwargs)
         if mask_zero_occupancy:
             # to avoid infinity (x/0) we set zero occupancy to nan
             # this can be handy when analyzing low occupancy maps
             rate_map = spike_map / occupancy_map
             rate_map[self.time_pos == 0] = np.nan
+        elif interpolate_invalid:
+            rate_map = spike_map / occupancy_map
+            rate_map = interpolate_nan_2D(rate_map)
         else:
             rate_map = spike_map / occupancy_map
             rate_map[np.isinf(rate_map)] = 0
