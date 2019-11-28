@@ -197,14 +197,22 @@ def in_field(x, y, fields, box_size):
     return np.array(fields[ix,iy])
 
 
-def crossings(field_indices):
-    """indices at which a field is entered or exited"""
-    # +1 to enter at first time inside
-    cross = np.where(np.diff(field_indices))[0]+1
-
-    # add first and last time steps as 'boundary crossings', then drop duplicates
-    cross = np.unique(np.hstack([0, cross, field_indices.size-1]))
-    return cross
+def compute_crossings(field_indices):
+    """Compute indices at which a field is entered or exited
+    Parameters
+    ----------
+    field_indices : 1D array
+        typically obtained with in_field
+    See also
+    --------
+    in_field
+    """
+    # make sure to start and end outside fields
+    field_indices = np.concatenate(([0], field_indices.astype(bool).astype(int), [0]))
+    enter, = np.where(np.diff(field_indices) == 1)
+    exit, = np.where(np.diff(field_indices) == -1)
+    assert len(enter) == len(exit), (len(enter), len(exit))
+    return enter, exit
 
 
 def distance_to_edge_function(x_c, y_c, field, box_size, interpolation='linear'):
