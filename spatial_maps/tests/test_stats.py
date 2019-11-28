@@ -34,6 +34,3 @@ def test_calc_population_vector_correlation():
     pv = pvcorr(rmaps1, rmaps2)
     err = pv-1
     assert err < 10e-5
-    
-    
-    

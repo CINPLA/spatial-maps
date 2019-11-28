@@ -30,7 +30,66 @@ def find_peaks(image):
     return peaks
 
 
-def separate_fields_by_laplace(rate_map, threshold=0, minimum_field_size=None):
+def sort_fields_by_rate(rate_map, fields, func=None):
+    '''Sort fields by the rate value of each field
+    Parameters
+    ----------
+    rate_map : array
+        The rate map
+    fields : array
+        The fields same shape as rate_map
+    func : function returning value to sort after, default np.max
+    Returns
+    -------
+    sorted_fields : array
+        Sorted fields
+    '''
+    indx = np.sort(np.unique(fields.ravel()))
+    func = func or np.max
+    # Sort by largest peak
+    rate_means = ndimage.labeled_comprehension(
+        rate_map, fields, indx, func, np.float64, 0)
+    sort = np.argsort(rate_means)[::-1]
+
+    # new rate map with fields > min_size, sorted
+    sorted_fields = np.zeros_like(fields)
+    for i in range(indx.max() + 1):
+        sorted_fields[fields == sort[i] + 1] = i + 1
+
+    return sorted_fields
+
+
+def remove_fields_by_area(fields, minimum_field_area):
+    '''Sets fields below minimum area to zero, measured as the number of bins in a field.
+    Parameters
+    ----------
+    fields : array
+        The fields
+    minimum_field_area : int
+        Minimum field area (number of bins in a field)
+    Returns
+    -------
+    fields
+        Fields with number of bins below minimum_field_area are set to zero
+    '''
+    if not isinstance(minimum_field_area, (int, np.integer)):
+        raise ValueError("'minimum_field_area' should be int")
+
+    ## variant
+    # fields_areas = scipy.ndimage.measurements.sum(
+    #     np.ones_like(fields), fields, index=np.arange(fields.max() + 1))
+    # fields_area = fields_areas[fields]
+    # fields[fields_area < minimum_field_area] = 0
+
+    labels, counts = np.unique(fields, return_counts=True)
+    for (lab, count) in zip(labels, counts):
+        if lab != 0:
+            if count < minimum_field_area:
+                fields[fields == lab] = 0
+    return fields
+
+
+def separate_fields_by_laplace(rate_map, threshold=0, minimum_field_area=None):
     """Separates fields using the laplacian to identify fields separated by
     a negative second derivative.
     Parameters
@@ -41,7 +100,7 @@ def separate_fields_by_laplace(rate_map, threshold=0, minimum_field_size=None):
         value of laplacian to separate fields by relative to the minima. Should be
         on the interval 0 to 1, where 0 cuts off at 0 and 1 cuts off at
         min(laplace(rate_map)). Default 0.
-    minimum_field_size: int
+    minimum_field_area: int
         minimum number of bins to consider it a field. Default None (all fields are kept)
     Returns
     -------

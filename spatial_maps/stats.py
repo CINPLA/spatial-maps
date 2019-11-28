@@ -215,7 +215,7 @@ def population_vector_correlation(rmaps1, rmaps2,
 
     corr_coeff_map = np.zeros((bins_x, bins_y))
     corr_coeff_map[:] = np.nan
-    
+
     for i in range(bins_x):
         for j in range(bins_y):
             xy1 = rmaps1[:, i, j]
@@ -236,7 +236,7 @@ def population_vector_correlation(rmaps1, rmaps2,
                 xy2)[0, 1]
 
     pop_vec_corr = np.nanmean(corr_coeff_map)
-    
+
     if return_corr_coeff_map:
         return pop_vec_corr, corr_coeff_map
     else:
