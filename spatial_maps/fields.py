@@ -111,37 +111,87 @@ def separate_fields_by_laplace(rate_map, threshold=0, minimum_field_area=None):
     :Authors:
         Halvard Sutterud <halvard.sutterud@gmail.com>
     """
-    from scipy import ndimage
 
     l = ndimage.laplace(rate_map)
 
-    l[l>threshold*np.min(l)] = 0
+    l[l > threshold * np.min(l)] = 0
+
+    # Labels areas of the laplacian not connected by values > 0.
+    fields, field_count = ndimage.label(l)
+    print(field_count)
+    fields = sort_fields_by_rate(rate_map, fields)
+    print(np.unique(fields.ravel()))
+    if minimum_field_area is not None:
+        fields = remove_fields_by_area(fields, minimum_field_area)
+    return fields
+
+
+def separate_fields_by_dilation(rate_map, seed=2.5, sigma=2.5, minimum_field_area=None):
+    """Separates fields by the Laplace of Gaussian (LoG)
+    on the rate map subtracted by a reconstruction of the rate map using
+    dilation.
+    Parameters
+    ----------
+    rate_map : np 2d array
+        firing rate in each bin
+    seed : float
+        Magnitude of dilation
+    sigma : float
+        Standard deviation of Gaussian to separate fields Default 2.
+    minimum_field_area: int
+        minimum number of bins to consider it a field. Default None (all fields are kept)
+    Returns
+    -------
+    labels : numpy array, shape like rate_map.
+        contains areas all filled with same value, corresponding to fields
+        in rate_map. The fill values are in range(1,nFields + 1), sorted by size of the
+        field (sum of all field values) with 0 elsewhere.
+    References
+    ----------
+    see https://scikit-image.org/docs/stable/auto_examples/color_exposure/plot_regional_maxima.html
+    """
+    from skimage.morphology import reconstruction
+    rate_map_norm = (rate_map - rate_map.mean()) / rate_map.std()
+    dilated = reconstruction(rate_map_norm - seed, rate_map_norm, method='dilation')
+    rate_map_reconstructed = rate_map_norm - dilated
+
+    l = ndimage.gaussian_laplace(rate_map_reconstructed, sigma)
+    l[l > 0] = 0
+    fields, field_count = ndimage.label(l)
+    fields = sort_fields_by_rate(rate_map, fields)
+    if minimum_field_area is not None:
+        fields = remove_fields_by_area(fields, minimum_field_area)
+    return fields
+
+
+def separate_fields_by_laplace_of_gaussian(rate_map, sigma=2, minimum_field_area=None):
+    """Separates fields using the Laplace of Gaussian (LoG) to identify fields
+    separated by a negative second derivative. Works best if no smoothing is
+    applied to the rate map, preferably with interpolated nans.
+    Parameters
+    ----------
+    rate_map : np 2d array
+        firing rate in each bin
+    sigma : float
+        Standard deviation of Gaussian to separate fields Default 2.
+    minimum_field_area: int
+        minimum number of bins to consider it a field. Default None (all fields are kept)
+    Returns
+    -------
+    labels : numpy array, shape like rate_map.
+        contains areas all filled with same value, corresponding to fields
+        in rate_map. The fill values are in range(1,nFields + 1), sorted by size of the
+        field (sum of all field values) with 0 elsewhere.
+    """
+    ndimage.gaussian_laplace(rate_map, sigma)
+    l[l > 0] = 0
 
     # Labels areas of the laplacian not connected by values > 0.
     fields, field_count = ndimage.label(l)
 
-    # index 0 is the background
-    indx = 1 + np.arange(field_count)
-
-    # Sort by largest peak
-    rate_means = ndimage.labeled_comprehension(
-        rate_map, fields, indx, np.max, np.float64, 0)
-    sort = np.argsort(rate_means)[::-1]
-
-    # new rate map with fields > min_size, sorted
-    new = np.zeros_like(fields)
-    for i in range(field_count):
-        new[fields == sort[i]+1] = i+1
-
-    fields = new
-    if minimum_field_size is not None:
-        assert isinstance(minimum_field_size, (int, np.integer)), "'minimum_field_size' should be int"
-
-        labels, counts = np.unique(fields, return_counts=True)
-        for (lab, count) in zip(labels, counts):
-            if lab != 0:
-                if count < minimum_field_size:
-                    fields[fields == lab] = 0
+    fields = sort_fields_by_rate(rate_map, fields)
+    if minimum_field_area is not None:
+        fields = remove_fields_by_area(fields, minimum_field_area)
     return fields
 
 
