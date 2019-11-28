@@ -187,7 +187,7 @@ def population_vector_correlation(rmaps1, rmaps2,
     """
     Calcualte population vector correlation between two
     stacks of rate maps.
-    
+
     Parameters
     ----------
     rmaps1 : ndarray
