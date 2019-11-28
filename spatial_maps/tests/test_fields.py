@@ -4,7 +4,7 @@ import quantities as pq
 from spatial_maps.tools import make_test_grid_rate_map, make_test_border_map
 from spatial_maps.fields import (
     separate_fields_by_laplace, find_peaks, calculate_field_centers,
-    border_score, in_field, distance_to_edge_function, map_pass_to_unit_circle)
+    in_field, distance_to_edge_function, map_pass_to_unit_circle)
 
 
 def test_find_peaks():
@@ -42,20 +42,6 @@ def test_separate_fields_by_laplace():
     # The position of a 2D bin is defined to be its center
     for p in pos_true:
         assert np.isclose(p, pos_true).prod(axis=1).any()
-
-
-def test_border_score():
-    box_size = [1., 1.]
-    rate = 1.
-    bin_size = [.01, .01]
-
-    rate_map, pos_true, xbins, ybins = make_test_border_map(
-        sigma=0.05, amplitude=rate, offset=0, box_size=box_size,
-        bin_size=bin_size)
-
-    labels = separate_fields_by_laplace(rate_map, threshold=0)
-    bs = border_score(rate_map, labels)
-    assert round(bs, 2) == .32
 
 
 def test_in_field():

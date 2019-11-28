@@ -3,6 +3,10 @@ import scipy.ndimage as ndimage
 import scipy.ndimage.filters as filters
 from .tools import fftcorrelate2d, autocorrelation
 
+def border_score(rate_map, fields):
+    raise DeprecationWarning('This function is moved to "spatial_maps.stats"')
+    return spatial_maps.stats(rate_map, fields)
+
 
 def find_peaks(image):
     """
