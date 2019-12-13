@@ -3,7 +3,7 @@ from .gridcells import (
     gridness, spacing_and_orientation, separate_fields_by_distance)
 from .fields import (
     border_score, calculate_field_centers, separate_fields_by_laplace,
-    find_peaks, in_field, compute_crossings)
+    find_peaks, which_field, compute_crossings)
 from .stats import (
     sparsity, selectivity, information_rate, information_specificity,
     prob_dist)

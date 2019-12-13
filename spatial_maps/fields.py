@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.ndimage as ndimage
 import scipy.ndimage.filters as filters
+from scipy.interpolate import interp2d, interp1d
 from .tools import fftcorrelate2d, autocorrelation
 
 def border_score(rate_map, fields):
@@ -118,9 +119,7 @@ def separate_fields_by_laplace(rate_map, threshold=0, minimum_field_area=None):
 
     # Labels areas of the laplacian not connected by values > 0.
     fields, field_count = ndimage.label(l)
-    print(field_count)
     fields = sort_fields_by_rate(rate_map, fields)
-    print(np.unique(fields.ravel()))
     if minimum_field_area is not None:
         fields = remove_fields_by_area(fields, minimum_field_area)
     return fields
@@ -217,7 +216,7 @@ def calculate_field_centers(rate_map, labels, center_method='maxima'):
     return bc
 
 
-def in_field(x, y, fields, box_size):
+def which_field(x, y, fields, box_size):
     """Returns which spatial field each (x,y)-position is in.
 
     Parameters:
@@ -239,14 +238,16 @@ def in_field(x, y, fields, box_size):
     if len(x)!= len(y):
         raise ValueError('x and y must have same length')
 
-    sx,sy   = fields.shape
+    sx, sy = fields.shape
     # bin sizes
-    dx      = box_size[0]/sx
-    dy      = box_size[1]/sy
-    x_bins  = dx + np.arange(0, box_size[0], dx)
-    y_bins  = dy + np.arange(0, box_size[1], dy)
-    ix      = np.digitize(x, x_bins)
-    iy      = np.digitize(y, y_bins)
+    dx = box_size[0]/sx
+    dy = box_size[1]/sy
+    x_bins = dx + np.arange(0, box_size[0] + dx, dx)
+    y_bins = dy + np.arange(0, box_size[1] + dx, dy)
+    # x_bins = np.arange(0, box_size[0] + dx, dx)
+    # y_bins = np.arange(0, box_size[1] + dx, dy)
+    ix = np.digitize(x, x_bins)
+    iy = np.digitize(y, y_bins)
 
     # fix for boundaries:
     ix[ix==sx] = sx-1
@@ -283,7 +284,6 @@ def distance_to_edge_function(x_c, y_c, field, box_size, interpolation='linear')
     """
 
     from skimage import measure
-    from scipy import interpolate
     contours = measure.find_contours(field, 0.8)
 
     box_dim = np.array(box_size)
@@ -309,8 +309,8 @@ def distance_to_edge_function(x_c, y_c, field, box_size, interpolation='linear')
         pad_x = np.delete(pad_x, mask)
         pad_y = np.delete(pad_y, mask)
 
-    x_func = interpolate.interp1d(pad_a, pad_x, kind=interpolation)
-    y_func = interpolate.interp1d(pad_a, pad_y, kind=interpolation)
+    x_func = interp1d(pad_a, pad_x, kind=interpolation)
+    y_func = interp1d(pad_a, pad_y, kind=interpolation)
 
     def dist_func(angle):
         x = x_func(angle)
