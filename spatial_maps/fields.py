@@ -5,7 +5,7 @@ from scipy.interpolate import interp2d, interp1d
 from .tools import fftcorrelate2d, autocorrelation
 
 def border_score(rate_map, fields):
-    raise DeprecationWarning('This function is moved to "spatial_maps.stats"')
+    raise DeprecationWarning('This function is moved to "spatial_maps.bordercells"')
     return spatial_maps.stats(rate_map, fields)
 
 
