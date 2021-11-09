@@ -8,4 +8,4 @@ from .bordercells import border_score
 from .stats import (
     sparsity, selectivity, information_rate, information_specificity,
     prob_dist)
-from .tools import autocorrelation, fftcorrelate2d
+from .tools import autocorrelation, fftcorrelate2d, nancorrelate2d

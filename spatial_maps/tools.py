@@ -42,6 +42,49 @@ def fftcorrelate2d(arr1, arr2, mode='full', normalize=False):
     corr = fftconvolve(arr1, np.fliplr(np.flipud(arr2)), mode=mode)
     return corr
 
+def nancorrelate2d(X, Y, mode='pearson') -> np.ndarray:
+    """
+    Calculate 2d pearson correlation from matrices with nans interpreted as
+    missing values, i.e. they are not included in any calculations. Also ignore
+    values outside correlation windows of X and Y.
+
+    Parameters
+    ----------
+    X : :
+        2D array
+    Y : np.array
+        2D array
+    mode : string
+        either 'pearson' or 'frobenius' for window aggregations
+
+    Returns
+    -------
+    result : np.array
+        nan and border ignored spatial cross correlation
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> X, Y = np.ones((2,2)), np.ones((2,2))
+    >>> Z = nancorrelate2d(X, Y, mode='frobenius')
+    """
+    import numpy.ma as ma
+    X = ma.masked_array(X, mask=np.isnan(X))
+    Y = Y[::-1][:,::-1] #
+    Y = ma.masked_array(Y, mask=np.isnan(Y))
+
+    result = np.zeros(X.shape)
+    for i in range(X.shape[0]):
+        for j in range(X.shape[1]):
+            scope_i = slice(max(0, i - X.shape[0]//2), min(i + X.shape[0]//2, X.shape[0]))
+            scope_j = slice(max(0, j - X.shape[1]//2), min(j + X.shape[1]//2, X.shape[1]))
+            if mode == 'pearson':
+                result[i,j] = ma.corrcoef(X[scope_i,scope_j].flatten(), Y[scope_i,scope_j][::-1][:,::-1].flatten())[0,1]
+            else: # scaled (average) frobenius inner product
+                result[i,j] = (X[scope_i,scope_j] * Y[scope_i,scope_j][::-1][:,::-1]).mean()
+
+    return result
+
 
 def masked_corrcoef2d(arr1, arr2):
     """
