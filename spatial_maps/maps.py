@@ -140,17 +140,13 @@ class SpatialMap:
         rate_map : array
         '''
         spike_map = self.spike_map(smoothing=smoothing, **kwargs)
+        # to avoid infinity (x/0) we set zero occupancy to nan
         occupancy_map = self.occupancy_map(
-            smoothing=smoothing, threshold=threshold, **kwargs)
-        if mask_zero_occupancy:
-            # to avoid infinity (x/0) we set zero occupancy to nan
-            # this can be handy when analyzing low occupancy maps
-            rate_map = spike_map / occupancy_map
-            rate_map[self.time_pos == 0] = np.nan
+            smoothing=smoothing, mask_zero_occupancy=True, threshold=threshold, **kwargs)
+        rate_map = spike_map / occupancy_map
+        if not mask_zero_occupancy:
+            rate_map[np.isnan(rate_map)] = 0
         elif interpolate_invalid:
-            rate_map = spike_map / occupancy_map
             rate_map = interpolate_nan_2D(rate_map)
-        else:
-            rate_map = spike_map / occupancy_map
-            rate_map[np.isinf(rate_map)] = 0
         return rate_map
+
