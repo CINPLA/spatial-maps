@@ -50,16 +50,16 @@ def nancorrelate2d(X, Y, mode='pearson') -> np.ndarray:
 
     Parameters
     ----------
-    X : :
+    X : np.ndarray
         2D array
-    Y : np.array
+    Y : np.ndarray
         2D array
     mode : string
         either 'pearson' or 'frobenius' for window aggregations
 
     Returns
     -------
-    result : np.array
+    np.ndarray
         nan and border ignored spatial cross correlation
 
     Example
@@ -67,6 +67,9 @@ def nancorrelate2d(X, Y, mode='pearson') -> np.ndarray:
     >>> import numpy as np
     >>> X, Y = np.ones((2,2)), np.ones((2,2))
     >>> Z = nancorrelate2d(X, Y, mode='frobenius')
+    >>> Z
+    array([[1., 1.],
+           [1., 1.]])
     """
     import numpy.ma as ma
     X = ma.masked_array(X, mask=np.isnan(X))
