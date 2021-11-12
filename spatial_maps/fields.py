@@ -211,6 +211,9 @@ def calculate_field_centers(rate_map, labels, center_method='maxima'):
     else:
         raise ValueError(
             "invalid center_method flag '{}'".format(center_method))
+    if not bc:
+        # empty list
+        return bc
     bc = np.array(bc)
     bc[:,[0, 1]] = bc[:,[1, 0]] # y, x -> x, y
     return bc
