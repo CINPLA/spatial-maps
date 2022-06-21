@@ -25,7 +25,7 @@ def find_peaks(image):
     indices = np.arange(1, num_objects+1)
     peaks = ndimage.maximum_position(image, labels=labels, index=indices)
     peaks = np.array(peaks)
-    center = np.array(image.shape) / 2
+    center = (np.array(image.shape) - 1) / 2
     distances = np.linalg.norm(peaks - center, axis=1)
     peaks = peaks[distances.argsort()]
     return peaks
