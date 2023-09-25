@@ -25,7 +25,7 @@ def find_peaks(image):
     indices = np.arange(1, num_objects+1)
     peaks = ndimage.maximum_position(image, labels=labels, index=indices)
     peaks = np.array(peaks)
-    center = np.array(image.shape) / 2
+    center = (np.array(image.shape) - 1) / 2
     distances = np.linalg.norm(peaks - center, axis=1)
     peaks = peaks[distances.argsort()]
     return peaks
@@ -211,6 +211,9 @@ def calculate_field_centers(rate_map, labels, center_method='maxima'):
     else:
         raise ValueError(
             "invalid center_method flag '{}'".format(center_method))
+    if not bc:
+        # empty list
+        return bc
     bc = np.array(bc)
     bc[:,[0, 1]] = bc[:,[1, 0]] # y, x -> x, y
     return bc
