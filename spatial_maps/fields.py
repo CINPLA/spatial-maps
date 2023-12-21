@@ -182,7 +182,7 @@ def separate_fields_by_laplace_of_gaussian(rate_map, sigma=2, minimum_field_area
         in rate_map. The fill values are in range(1,nFields + 1), sorted by size of the
         field (sum of all field values) with 0 elsewhere.
     """
-    ndimage.gaussian_laplace(rate_map, sigma)
+    l = ndimage.gaussian_laplace(rate_map, sigma)
     l[l > 0] = 0
 
     # Labels areas of the laplacian not connected by values > 0.
