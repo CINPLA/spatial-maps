@@ -157,7 +157,7 @@ def prob_dist(x, y, bins):
         is the y axis, the second dimension is the x axis.
     '''
 
-    H, _, _ = np.histogram2d(x, y, bins=bins, normed=False)
+    H, _, _ = np.histogram2d(x, y, bins=bins, density=False)
     return (H / len(x))
 
 
@@ -177,7 +177,7 @@ def prob_dist_1d(x, bins):
         is the y axis, the second dimension is the x axis.
     '''
 
-    H, _ = np.histogram(x, bins=bins, normed=False)
+    H, _ = np.histogram(x, bins=bins, density=False)
     return (H / len(x)).T
 
 
