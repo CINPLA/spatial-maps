@@ -1,0 +1,58 @@
+[project]
+name = "spatial_maps"
+version = "0.2.0"
+authors = [
+    { name = "Mikkel Lepperod", email = "mikkel@simula.no" },
+    { name = "Alessio Buccino", email = "alessiop.buccino@gmail.com" },
+]
+
+description = "Compute spatial maps for neural data."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "numpy<2",
+    "scipy",
+    "scikit-image",
+    "astropy",
+    "pandas",
+    "elephant",
+    "matplotlib"
+]
+
+[project.urls]
+homepage = "https://github.com/CINPLA/spatial-maps"
+repository = "https://github.com/CINPLA/spatial-maps"
+
+[build-system]
+requires = ["setuptools>=62.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["spatial_maps*"]
+namespaces = false
+
+[project.optional-dependencies]
+dev = ["pre-commit", "black[jupyter]", "isort", "ruff"]
+test = ["pytest", "pytest-cov", "pytest-dependency", "mountainsort5"]
+docs = ["sphinx-gallery", "sphinx_rtd_theme"]
+full = [
+    "spatial_maps[dev]",
+    "spatial_maps[test]",
+    "spatial_maps[docs]",
+]
+
+[tool.coverage.run]
+omit = ["tests/*"]
+
+[tool.black]
+line-length = 120

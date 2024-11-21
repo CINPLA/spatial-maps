@@ -26,9 +26,9 @@ def border_score(rate_map, fields):
     if np.all(fields == 0):
         raise ValueError("Must have at least one field")
 
-    inner = np.zeros(np.array(rate_map.shape)-(4,4),dtype=bool)
-    wall = np.pad(inner, 1, 'constant', constant_values=[[0,0],[1,0]])
-    wall = np.pad(wall, 1, 'constant', constant_values=0)
+    inner = np.zeros(np.array(rate_map.shape) - (4, 4), dtype=bool)
+    wall = np.pad(inner, 1, "constant", constant_values=[[0, 0], [1, 0]])
+    wall = np.pad(wall, 1, "constant", constant_values=0)
     max_extent = 0
 
     ones = np.ones_like(rate_map)
@@ -36,8 +36,8 @@ def border_score(rate_map, fields):
     for i in range(4):
         borders = np.logical_and(fields > 0, wall)
         extents = labeled_comprehension(
-            input=borders, labels=fields, index=None, func=np.sum,
-            out_dtype=np.int64, default=0)
+            input=borders, labels=fields, index=None, func=np.sum, out_dtype=np.int64, default=0
+        )
         max_extent = np.max([max_extent, np.max(extents)])
 
         # dont rotate the fourth time
@@ -47,7 +47,7 @@ def border_score(rate_map, fields):
 
     x = np.linspace(-0.5, 0.5, rate_map.shape[1])
     y = np.linspace(-0.5, 0.5, rate_map.shape[0])
-    X,Y = np.meshgrid(x,y)
+    X, Y = np.meshgrid(x, y)
 
     # create linear increasing value towards middle
     dist_to_nearest_wall = 1 - (np.abs(X + Y) + np.abs(X - Y))

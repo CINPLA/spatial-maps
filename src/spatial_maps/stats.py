@@ -2,20 +2,19 @@ import numpy as np
 
 
 def _inf_rate(rate_map, px):
-    '''
+    """
     A helper function for information rate.
 
     Originally from https://github.com/MattNolanLab/gridcells
-    '''
+    """
     tmp_rate_map = rate_map.copy()
     tmp_rate_map[np.isnan(tmp_rate_map)] = 0
     avg_rate = np.sum(np.ravel(tmp_rate_map * px))
-    return (np.nansum(np.ravel(tmp_rate_map * np.log2(tmp_rate_map/avg_rate) *
-            px)), avg_rate)
+    return (np.nansum(np.ravel(tmp_rate_map * np.log2(tmp_rate_map / avg_rate) * px)), avg_rate)
 
 
 def sparsity(rate_map, px):
-    '''
+    """
     Compute sparsity of a rate map, The sparsity  measure is an adaptation
     to space. The adaptation measures the fraction of the environment  in which
     a cell is  active. A sparsity of, 0.1 means that the place field of the
@@ -36,7 +35,7 @@ def sparsity(rate_map, px):
     .. [2] Skaggs, W. E., McNaughton, B. L., Wilson, M., & Barnes, C. (1996).
        Theta phase precession in hippocampal neuronal populations and the
        compression of temporal sequences. Hippocampus, 6, 149-172.
-    '''
+    """
     tmp_rate_map = rate_map.copy()
     tmp_rate_map[np.isnan(tmp_rate_map)] = 0
     avg_rate = np.sum(np.ravel(tmp_rate_map * px))
@@ -45,7 +44,7 @@ def sparsity(rate_map, px):
 
 
 def selectivity(rate_map, px):
-    '''
+    """
     "The selectivity measure max(rate)/mean(rate)  of the cell. The more
     tightly concentrated  the cell's activity, the higher the selectivity.
     A cell with no spatial tuning at all will  have a  selectivity of 1" [2]_.
@@ -59,7 +58,7 @@ def selectivity(rate_map, px):
     -------
     out : float
         selectivity
-    '''
+    """
     tmp_rate_map = rate_map.copy()
     tmp_rate_map[np.isnan(tmp_rate_map)] = 0
     avg_rate = np.sum(np.ravel(tmp_rate_map * px))
@@ -68,7 +67,7 @@ def selectivity(rate_map, px):
 
 
 def information_rate(rate_map, px):
-    '''
+    """
     Compute information rate of a cell given variable x.
     A simple algorithm devised by [1]_. This computes the spatial information
     rate of cell spikes given variable x (e.g. position, head direction) in
@@ -111,12 +110,12 @@ def information_rate(rate_map, px):
     .. [1] Skaggs, W.E. et al., 1993. An Information-Theoretic Approach to
        Deciphering the Hippocampal Code. In Advances in Neural Information
        Processing Systems 5. pp. 1030-1037.
-    '''
+    """
     return _inf_rate(rate_map, px)[0]
 
 
 def information_specificity(rate_map, px):
-    '''
+    """
     Compute the 'specificity' of the cell firing rate to a variable X.
     Compute :func:`information_rate` for this cell and divide by the average
     firing rate of the cell. See [1]_ for more information.
@@ -135,13 +134,13 @@ def information_specificity(rate_map, px):
     -------
     I : float
         Information in bits/spike.
-    '''
+    """
     I, avg_rate = _inf_rate(rate_map, px)
     return I / avg_rate
 
 
 def prob_dist(x, y, bins):
-    '''
+    """
     Calculate a probability distribution for animal positions in an arena.
 
     Parameters
@@ -155,14 +154,14 @@ def prob_dist(x, y, bins):
     dist : numpy.ndarray
         Probability distribution for the positional data. The first dimension
         is the y axis, the second dimension is the x axis.
-    '''
+    """
 
     H, _, _ = np.histogram2d(x, y, bins=bins, density=False)
-    return (H / len(x))
+    return H / len(x)
 
 
 def prob_dist_1d(x, bins):
-    '''
+    """
     Calculate a probability distribution for animal positions in an arena.
 
     Parameters
@@ -175,15 +174,13 @@ def prob_dist_1d(x, bins):
     dist : numpy.ndarray
         Probability distribution for the positional data. The first dimension
         is the y axis, the second dimension is the x axis.
-    '''
+    """
 
     H, _ = np.histogram(x, bins=bins, density=False)
     return (H / len(x)).T
 
 
-def population_vector_correlation(rmaps1, rmaps2,
-                                  mask_nans=False,
-                                  return_corr_coeff_map=False):
+def population_vector_correlation(rmaps1, rmaps2, mask_nans=False, return_corr_coeff_map=False):
     """
     Calcualte population vector correlation between two
     stacks of rate maps.
@@ -224,16 +221,12 @@ def population_vector_correlation(rmaps1, rmaps2,
                 bool_nan_xy1 = np.isnan(xy1)
                 bool_nan_xy2 = np.isnan(xy2)
 
-                mask_invalid = np.logical_or(
-                    bool_nan_xy1,
-                    bool_nan_xy2)
+                mask_invalid = np.logical_or(bool_nan_xy1, bool_nan_xy2)
                 mask_valid = ~mask_invalid
                 xy1 = xy1[mask_valid]
                 xy2 = xy2[mask_valid]
 
-            corr_coeff_map[i, j] = np.corrcoef(
-                xy1,
-                xy2)[0, 1]
+            corr_coeff_map[i, j] = np.corrcoef(xy1, xy2)[0, 1]
 
     pop_vec_corr = np.nanmean(corr_coeff_map)
 
