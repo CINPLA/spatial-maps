@@ -16,7 +16,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "numpy"<2,
+    "numpy<2",
     "scipy",
     "astropy",
     "pandas",
