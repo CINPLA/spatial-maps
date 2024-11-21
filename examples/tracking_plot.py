@@ -5,10 +5,21 @@ import math
 from scipy.ndimage.measurements import center_of_mass
 
 
-def plot_path(x, y, t, box_size, spike_times=None,
-              color='grey', alpha=0.5, origin='upper',
-              spike_color='r', rate_markersize=False, markersize=10.,
-              animate=False, ax=None):
+def plot_path(
+    x,
+    y,
+    t,
+    box_size,
+    spike_times=None,
+    color="grey",
+    alpha=0.5,
+    origin="upper",
+    spike_color="r",
+    rate_markersize=False,
+    markersize=10.0,
+    animate=False,
+    ax=None,
+):
     """
     Plot path visited
 
@@ -39,8 +50,7 @@ def plot_path(x, y, t, box_size, spike_times=None,
     """
     if ax is None:
         fig = plt.figure()
-        ax = fig.add_subplot(
-            111, xlim=[0, box_size], ylim=[0, box_size], aspect=1)
+        ax = fig.add_subplot(111, xlim=[0, box_size], ylim=[0, box_size], aspect=1)
 
     ax.plot(x, y, c=color, alpha=alpha)
     if spike_times is not None:
@@ -49,20 +59,36 @@ def plot_path(x, y, t, box_size, spike_times=None,
 
         if rate_markersize:
             markersize = spikes_in_bin[is_spikes_in_bin] * markersize
-        ax.scatter(x[:-1][is_spikes_in_bin], y[:-1][is_spikes_in_bin],
-                   facecolor=spike_color, edgecolor=spike_color,
-                   s=markersize)
+        ax.scatter(
+            x[:-1][is_spikes_in_bin],
+            y[:-1][is_spikes_in_bin],
+            facecolor=spike_color,
+            edgecolor=spike_color,
+            s=markersize,
+        )
 
     ax.grid(False)
-    if origin == 'upper':
+    if origin == "upper":
         ax.invert_yaxis()
     return ax
 
 
-def animate_path(x, y, t, box_size, spike_times=None,
-              color='grey', alpha=0.5, origin='upper',
-              spike_color='r', rate_markersize=False, markersize=10.,
-              animate=False, ax=None, title=''):
+def animate_path(
+    x,
+    y,
+    t,
+    box_size,
+    spike_times=None,
+    color="grey",
+    alpha=0.5,
+    origin="upper",
+    spike_color="r",
+    rate_markersize=False,
+    markersize=10.0,
+    animate=False,
+    ax=None,
+    title="",
+):
     """
     Plot path visited
 
@@ -93,35 +119,35 @@ def animate_path(x, y, t, box_size, spike_times=None,
     """
     if ax is None:
         fig = plt.figure()
-        ax = fig.add_subplot(
-            111, xlim=[0, box_size], ylim=[0, box_size], aspect=1)
+        ax = fig.add_subplot(111, xlim=[0, box_size], ylim=[0, box_size], aspect=1)
     if spike_times is not None:
         spikes_in_bin, _ = np.histogram(spike_times, t)
         is_spikes_in_bin = np.array(spikes_in_bin, dtype=bool)
 
         if rate_markersize:
-            markersizes = spikes_in_bin[is_spikes_in_bin]*markersize
+            markersizes = spikes_in_bin[is_spikes_in_bin] * markersize
         else:
-            markersizes = markersize*np.ones(is_spikes_in_bin.size)
+            markersizes = markersize * np.ones(is_spikes_in_bin.size)
     ax.set_title(title)
     ax.grid(False)
-    if origin == 'upper':
+    if origin == "upper":
         ax.invert_yaxis()
     import time
+
     plt.show()
     for idx, x, y, active, msize in zip(range(len(x)), x, y):
         ax.plot(x, y, c=color, alpha=alpha)
         if spike_times is not None:
             if is_spikes_in_bin[idx]:
-                ax.scatter(x, y, facecolor=spike_color, edgecolor=spike_color,
-                           s=markersizes[idx])
+                ax.scatter(x, y, facecolor=spike_color, edgecolor=spike_color, s=markersizes[idx])
         time.sleep(0.1)  # plt.pause(0.0001)
         plt.draw()
     return ax
 
 
-def plot_head_direction_rate(spike_times, ang_bins, rate_in_ang, projection='polar',
-                             normalization=False, ax=None, color='k'):
+def plot_head_direction_rate(
+    spike_times, ang_bins, rate_in_ang, projection="polar", normalization=False, ax=None, color="k"
+):
     """
 
 
@@ -142,8 +168,9 @@ def plot_head_direction_rate(spike_times, ang_bins, rate_in_ang, projection='pol
     out : ax
     """
     import math
+
     if normalization:
-        rate_in_ang = normalize(rate_in_ang, mode='minmax')
+        rate_in_ang = normalize(rate_in_ang, mode="minmax")
     if ax is None:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection=projection)
@@ -151,7 +178,7 @@ def plot_head_direction_rate(spike_times, ang_bins, rate_in_ang, projection='pol
     if projection is None:
         ax.set_xticks(range(0, 360 + 60, 60))
         ax.set_xlim(0, 360)
-    elif projection == 'polar':
+    elif projection == "polar":
         ang_bins = [math.radians(deg) for deg in ang_bins]
         bin_size = math.radians(bin_size)
         ax.set_xticks([0, np.pi])
@@ -159,9 +186,20 @@ def plot_head_direction_rate(spike_times, ang_bins, rate_in_ang, projection='pol
     return ax
 
 
-def plot_ratemap(x, y, t, spike_times, bin_size=0.05, box_size=1,
-                 box_size=1, vmin=0, ax=None, smoothing=.05,
-                 origin='upper', cmap='viridis'):
+def plot_ratemap(
+    x,
+    y,
+    t,
+    spike_times,
+    bin_size=0.05,
+    box_size=1,
+    box_size=1,
+    vmin=0,
+    ax=None,
+    smoothing=0.05,
+    origin="upper",
+    cmap="viridis",
+):
     """
 
 
@@ -184,19 +222,17 @@ def plot_ratemap(x, y, t, spike_times, bin_size=0.05, box_size=1,
         fig = plt.figure()
         ax = fig.add_subplot(111, xlim=[0, 1], ylim=[0, 1], aspect=1)
 
-    map = SpatialMap(
-        x, y, t, spike_times, bin_size=bin_size, box_size=box_size)
+    map = SpatialMap(x, y, t, spike_times, bin_size=bin_size, box_size=box_size)
     rate_map = map.rate_map(smoothing)
-    ax.imshow(rate_map, interpolation='none', origin=origin,
-              extent=(0, 1, 0, 1), vmin=vmin, cmap=cmap)
-    ax.set_title('%.2f Hz' % np.nanmax(rate_map))
+    ax.imshow(rate_map, interpolation="none", origin=origin, extent=(0, 1, 0, 1), vmin=vmin, cmap=cmap)
+    ax.set_title("%.2f Hz" % np.nanmax(rate_map))
     ax.grid(False)
     return ax
 
 
-def plot_occupancy(x, y, t, bin_size=0.05, box_size=1, box_size=1,
-                  vmin=0, ax=None, convolve=True,
-                  origin='upper', cmap='jet'):
+def plot_occupancy(
+    x, y, t, bin_size=0.05, box_size=1, box_size=1, vmin=0, ax=None, convolve=True, origin="upper", cmap="jet"
+):
     """
 
 
@@ -219,10 +255,10 @@ def plot_occupancy(x, y, t, bin_size=0.05, box_size=1, box_size=1,
         fig = plt.figure()
         ax = fig.add_subplot(111, xlim=[0, 1], ylim=[0, 1], aspect=1)
 
-    occ_map = occupancy_map(x, y, t, bin_size=bin_size, box_size=box_size,
-                             box_size=box_size, convolve=convolve)
-    cax = ax.imshow(occ_map, interpolation='none', origin=origin,
-                   extent=(0, 1, 0, 1), vmin=vmin, cmap=cmap, aspect='auto')
+    occ_map = occupancy_map(x, y, t, bin_size=bin_size, box_size=box_size, box_size=box_size, convolve=convolve)
+    cax = ax.imshow(
+        occ_map, interpolation="none", origin=origin, extent=(0, 1, 0, 1), vmin=vmin, cmap=cmap, aspect="auto"
+    )
     # ax.set_title('%.2f s' % np.nanmax(occ_map))
     ax.grid(False)
     return cax, np.nanmax(occ_map)

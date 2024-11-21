@@ -4,6 +4,7 @@ import scipy.ndimage.filters as filters
 from scipy.interpolate import interp2d, interp1d
 from .tools import fftcorrelate2d, autocorrelation
 
+
 def border_score(rate_map, fields):
     raise DeprecationWarning('This function is moved to "spatial_maps.bordercells"')
     return spatial_maps.stats(rate_map, fields)
@@ -17,12 +18,13 @@ def find_peaks(image):
     peaks : array
         coordinates for peaks in image as [row, column]
     """
+    from scipy.ndimage import maximum_filter
     image = image.copy()
     image[~np.isfinite(image)] = 0
-    image_max = filters.maximum_filter(image, 3)
-    is_maxima = (image == image_max)
+    image_max = maximum_filter(image, 3)
+    is_maxima = image == image_max
     labels, num_objects = ndimage.label(is_maxima)
-    indices = np.arange(1, num_objects+1)
+    indices = np.arange(1, num_objects + 1)
     peaks = ndimage.maximum_position(image, labels=labels, index=indices)
     peaks = np.array(peaks)
     center = (np.array(image.shape) - 1) / 2
@@ -32,7 +34,7 @@ def find_peaks(image):
 
 
 def sort_fields_by_rate(rate_map, fields, func=None):
-    '''Sort fields by the rate value of each field
+    """Sort fields by the rate value of each field
     Parameters
     ----------
     rate_map : array
@@ -44,12 +46,11 @@ def sort_fields_by_rate(rate_map, fields, func=None):
     -------
     sorted_fields : array
         Sorted fields
-    '''
+    """
     indx = np.sort(np.unique(fields.ravel()))
     func = func or np.max
     # Sort by largest peak
-    rate_means = ndimage.labeled_comprehension(
-        rate_map, fields, indx, func, np.float64, 0)
+    rate_means = ndimage.labeled_comprehension(rate_map, fields, indx, func, np.float64, 0)
     sort = np.argsort(rate_means)[::-1]
 
     # new rate map with fields > min_size, sorted
@@ -61,7 +62,7 @@ def sort_fields_by_rate(rate_map, fields, func=None):
 
 
 def remove_fields_by_area(fields, minimum_field_area):
-    '''Sets fields below minimum area to zero, measured as the number of bins in a field.
+    """Sets fields below minimum area to zero, measured as the number of bins in a field.
     Parameters
     ----------
     fields : array
@@ -72,7 +73,7 @@ def remove_fields_by_area(fields, minimum_field_area):
     -------
     fields
         Fields with number of bins below minimum_field_area are set to zero
-    '''
+    """
     if not isinstance(minimum_field_area, (int, np.integer)):
         raise ValueError("'minimum_field_area' should be int")
 
@@ -83,7 +84,7 @@ def remove_fields_by_area(fields, minimum_field_area):
     # fields[fields_area < minimum_field_area] = 0
 
     labels, counts = np.unique(fields, return_counts=True)
-    for (lab, count) in zip(labels, counts):
+    for lab, count in zip(labels, counts):
         if lab != 0:
             if count < minimum_field_area:
                 fields[fields == lab] = 0
@@ -150,8 +151,9 @@ def separate_fields_by_dilation(rate_map, seed=2.5, sigma=2.5, minimum_field_are
     see https://scikit-image.org/docs/stable/auto_examples/color_exposure/plot_regional_maxima.html
     """
     from skimage.morphology import reconstruction
+
     rate_map_norm = (rate_map - rate_map.mean()) / rate_map.std()
-    dilated = reconstruction(rate_map_norm - seed, rate_map_norm, method='dilation')
+    dilated = reconstruction(rate_map_norm - seed, rate_map_norm, method="dilation")
     rate_map_reconstructed = rate_map_norm - dilated
 
     l = ndimage.gaussian_laplace(rate_map_reconstructed, sigma)
@@ -194,28 +196,26 @@ def separate_fields_by_laplace_of_gaussian(rate_map, sigma=2, minimum_field_area
     return fields
 
 
-def calculate_field_centers(rate_map, labels, center_method='maxima'):
+def calculate_field_centers(rate_map, labels, center_method="maxima"):
     """Finds center of fields at labels.
     :Authors:
         Halvard Sutterud <halvard.sutterud@gmail.com>
     """
 
     from scipy import ndimage
+
     indices = np.arange(1, np.max(labels) + 1)
-    if center_method == 'maxima':
-        bc = ndimage.maximum_position(
-            rate_map, labels=labels, index=indices)
-    elif center_method == 'center_of_mass':
-        bc = ndimage.center_of_mass(
-            rate_map, labels=labels, index=indices)
+    if center_method == "maxima":
+        bc = ndimage.maximum_position(rate_map, labels=labels, index=indices)
+    elif center_method == "center_of_mass":
+        bc = ndimage.center_of_mass(rate_map, labels=labels, index=indices)
     else:
-        raise ValueError(
-            "invalid center_method flag '{}'".format(center_method))
+        raise ValueError("invalid center_method flag '{}'".format(center_method))
     if not bc:
         # empty list
         return bc
     bc = np.array(bc)
-    bc[:,[0, 1]] = bc[:,[1, 0]] # y, x -> x, y
+    bc[:, [0, 1]] = bc[:, [1, 0]]  # y, x -> x, y
     return bc
 
 
@@ -238,13 +238,13 @@ def which_field(x, y, fields, box_size):
         arraylike x and y with fields-labeled indices
     """
 
-    if len(x)!= len(y):
-        raise ValueError('x and y must have same length')
+    if len(x) != len(y):
+        raise ValueError("x and y must have same length")
 
     sx, sy = fields.shape
     # bin sizes
-    dx = box_size[0]/sx
-    dy = box_size[1]/sy
+    dx = box_size[0] / sx
+    dy = box_size[1] / sy
     x_bins = dx + np.arange(0, box_size[0] + dx, dx)
     y_bins = dy + np.arange(0, box_size[1] + dx, dy)
     # x_bins = np.arange(0, box_size[0] + dx, dx)
@@ -253,9 +253,9 @@ def which_field(x, y, fields, box_size):
     iy = np.digitize(y, y_bins)
 
     # fix for boundaries:
-    ix[ix==sx] = sx-1
-    iy[iy==sy] = sy-1
-    return np.array(fields[ix,iy])
+    ix[ix == sx] = sx - 1
+    iy[iy == sy] = sy - 1
+    return np.array(fields[ix, iy])
 
 
 def compute_crossings(field_indices):
@@ -270,13 +270,13 @@ def compute_crossings(field_indices):
     """
     # make sure to start and end outside fields
     field_indices = np.concatenate(([0], field_indices.astype(bool).astype(int), [0]))
-    enter, = np.where(np.diff(field_indices) == 1)
-    exit, = np.where(np.diff(field_indices) == -1)
+    (enter,) = np.where(np.diff(field_indices) == 1)
+    (exit,) = np.where(np.diff(field_indices) == -1)
     assert len(enter) == len(exit), (len(enter), len(exit))
     return enter, exit
 
 
-def distance_to_edge_function(x_c, y_c, field, box_size, interpolation='linear'):
+def distance_to_edge_function(x_c, y_c, field, box_size, interpolation="linear"):
     """Returns a function which for a given angle returns the distance to
     the edge of the field from the center.
     Parameters:
@@ -287,6 +287,7 @@ def distance_to_edge_function(x_c, y_c, field, box_size, interpolation='linear')
     """
 
     from skimage import measure
+
     contours = measure.find_contours(field, 0.8)
 
     box_dim = np.array(box_size)
@@ -300,13 +301,13 @@ def distance_to_edge_function(x_c, y_c, field, box_size, interpolation='linear')
     edge_y = edge_y[a_sort]
 
     # # Fill in edge values for the interpolation
-    pad_a = np.pad(angles, 2, mode='linear_ramp', end_values=(0, 2 * np.pi))
+    pad_a = np.pad(angles, 2, mode="linear_ramp", end_values=(0, 2 * np.pi))
     ev_x = (edge_x[0] + edge_x[-1]) / 2
-    pad_x = np.pad(edge_x, 2, mode='linear_ramp', end_values=ev_x)
+    pad_x = np.pad(edge_x, 2, mode="linear_ramp", end_values=ev_x)
     ev_y = (edge_y[0] + edge_y[-1]) / 2
-    pad_y = np.pad(edge_y, 2, mode='linear_ramp', end_values=ev_y)
+    pad_y = np.pad(edge_y, 2, mode="linear_ramp", end_values=ev_y)
 
-    if interpolation=='cubic':
+    if interpolation == "cubic":
         mask = np.where(np.diff(pad_a) == 0)
         pad_a = np.delete(pad_a, mask)
         pad_x = np.delete(pad_x, mask)
@@ -318,7 +319,7 @@ def distance_to_edge_function(x_c, y_c, field, box_size, interpolation='linear')
     def dist_func(angle):
         x = x_func(angle)
         y = y_func(angle)
-        dist = np.sqrt((x - x_c)**2 + (y - y_c)**2)
+        dist = np.sqrt((x - x_c) ** 2 + (y - y_c) ** 2)
         return dist
 
     return dist_func
@@ -360,10 +361,8 @@ def map_pass_to_unit_circle(x, y, t, x_c, y_c, field=None, box_size=None, dist_f
         placecell firing in open environment
     """
     if dist_func is None:
-        assert field is not None and box_size is not None, (
-            'either provide "dist_func" or "field" and "box_size"')
-        dist_func= distance_to_edge_function(
-            x_c, y_c, field, box_size, interpolation='linear')
+        assert field is not None and box_size is not None, 'either provide "dist_func" or "field" and "box_size"'
+        dist_func = distance_to_edge_function(x_c, y_c, field, box_size, interpolation="linear")
     pos = np.array((x, y))
 
     # vector from pos to center p
@@ -387,9 +386,9 @@ def map_pass_to_unit_circle(x, y, t, x_c, y_c, field=None, box_size=None, dist_f
     # is toward positive x
     theta = (angle - np.arctan2(mean_velocity[1], mean_velocity[0])) % (2 * np.pi)
 
-    w_pdcd = (angle - np.arctan2(velocity[1], velocity[0]))
+    w_pdcd = angle - np.arctan2(velocity[1], velocity[0])
     pdcd = r * np.cos(w_pdcd)
 
-    w_pdmd = (angle - np.arctan2(mean_velocity[1], mean_velocity[0]))
+    w_pdmd = angle - np.arctan2(mean_velocity[1], mean_velocity[0])
     pdmd = r * np.cos(w_pdmd)
     return r, theta, pdcd, pdmd

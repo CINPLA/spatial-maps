@@ -69,15 +69,11 @@ def interpolate_nan_2D(array, method="nearest"):
     y1 = yy[~array.mask]
     newarr = array[~array.mask]
 
-    return interpolate.griddata(
-        (x1, y1), newarr.ravel(), (xx, yy), method=method, fill_value=0
-    )
+    return interpolate.griddata((x1, y1), newarr.ravel(), (xx, yy), method=method, fill_value=0)
 
 
 class SpatialMap:
-    def __init__(
-        self, smoothing=0.05, box_size=[1.0, 1.0], bin_size=0.02, bin_count=None
-    ):
+    def __init__(self, smoothing=0.05, box_size=[1.0, 1.0], bin_size=0.02, bin_count=None):
         """
         Parameters
         ----------
@@ -99,11 +95,7 @@ class SpatialMap:
 
     def spike_map(self, x, y, t, spike_times, mask_zero_occupancy=True, **kwargs):
         spmap = _spike_map(x, y, t, spike_times, self.xbins, self.ybins)
-        spmap = (
-            smooth_map(spmap, self.bin_size, self.smoothing, **kwargs)
-            if self.smoothing
-            else spmap
-        )
+        spmap = smooth_map(spmap, self.bin_size, self.smoothing, **kwargs) if self.smoothing else spmap
         if mask_zero_occupancy:
             spmap[_occupancy_map(x, y, t, self.xbins, self.ybins) == 0] = np.nan
         return spmap
@@ -111,25 +103,12 @@ class SpatialMap:
     def occupancy_map(self, x, y, t, mask_zero_occupancy=True, **kwargs):
         ocmap = _occupancy_map(x, y, t, self.xbins, self.ybins)
         ocmap_copy = copy(ocmap)  # to mask zero occupancy after smoothing
-        ocmap = (
-            smooth_map(ocmap, self.bin_size, self.smoothing, **kwargs)
-            if self.smoothing
-            else ocmap
-        )
+        ocmap = smooth_map(ocmap, self.bin_size, self.smoothing, **kwargs) if self.smoothing else ocmap
         if mask_zero_occupancy:
             ocmap[ocmap_copy == 0] = np.nan
         return ocmap
 
-    def rate_map(
-        self,
-        x,
-        y,
-        t,
-        spike_times,
-        mask_zero_occupancy=True,
-        interpolate_invalid=False,
-        **kwargs
-    ):
+    def rate_map(self, x, y, t, spike_times, mask_zero_occupancy=True, interpolate_invalid=False, **kwargs):
         """Calculate rate map as spike_map / occupancy_map
         Parameters
         ----------
@@ -144,9 +123,7 @@ class SpatialMap:
         -------
         rate_map : array
         """
-        spike_map = self.spike_map(
-            x, y, t, spike_times, mask_zero_occupancy=mask_zero_occupancy, **kwargs
-        )
+        spike_map = self.spike_map(x, y, t, spike_times, mask_zero_occupancy=mask_zero_occupancy, **kwargs)
         # to avoid infinity (x/0) we set zero occupancy to nan
         occupancy_map = self.occupancy_map(x, y, t, mask_zero_occupancy=True, **kwargs)
         rate_map = spike_map / occupancy_map

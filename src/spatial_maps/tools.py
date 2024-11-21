@@ -82,21 +82,15 @@ def nancorrelate2d(X, Y, mode="frobenius") -> np.ndarray:
     result = np.zeros(X.shape)
     for i in range(X.shape[0]):
         for j in range(X.shape[1]):
-            scope_i = slice(
-                max(0, i - X.shape[0] // 2), min(i + X.shape[0] // 2, X.shape[0])
-            )
-            scope_j = slice(
-                max(0, j - X.shape[1] // 2), min(j + X.shape[1] // 2, X.shape[1])
-            )
+            scope_i = slice(max(0, i - X.shape[0] // 2), min(i + X.shape[0] // 2, X.shape[0]))
+            scope_j = slice(max(0, j - X.shape[1] // 2), min(j + X.shape[1] // 2, X.shape[1]))
             if mode == "pearson":
                 result[i, j] = ma.corrcoef(
                     X[scope_i, scope_j].flatten(),
                     Y[scope_i, scope_j][::-1][:, ::-1].flatten(),
                 )[0, 1]
             elif mode == "frobenius":  # scaled (average) frobenius inner product
-                result[i, j] = (
-                    X[scope_i, scope_j] * Y[scope_i, scope_j][::-1][:, ::-1]
-                ).mean()
+                result[i, j] = (X[scope_i, scope_j] * Y[scope_i, scope_j][::-1][:, ::-1]).mean()
             else:
                 raise NotImplementedError("Method does not have mode={}".format(mode))
 
@@ -154,18 +148,10 @@ def gaussian2D(amp, x, y, xc, yc, s):
 def gaussian2D_asym(pos, amplitude, xc, yc, sigma_x, sigma_y, theta):
     x, y = pos
 
-    a = (np.cos(theta) ** 2) / (2 * sigma_x ** 2) + (np.sin(theta) ** 2) / (
-        2 * sigma_y ** 2
-    )
-    b = -(np.sin(2 * theta)) / (4 * sigma_x ** 2) + (np.sin(2 * theta)) / (
-        4 * sigma_y ** 2
-    )
-    c = (np.sin(theta) ** 2) / (2 * sigma_x ** 2) + (np.cos(theta) ** 2) / (
-        2 * sigma_y ** 2
-    )
-    g = amplitude * np.exp(
-        -(a * ((x - xc) ** 2) + 2 * b * (x - xc) * (y - yc) + c * ((y - yc) ** 2))
-    )
+    a = (np.cos(theta) ** 2) / (2 * sigma_x**2) + (np.sin(theta) ** 2) / (2 * sigma_y**2)
+    b = -(np.sin(2 * theta)) / (4 * sigma_x**2) + (np.sin(2 * theta)) / (4 * sigma_y**2)
+    c = (np.sin(theta) ** 2) / (2 * sigma_x**2) + (np.cos(theta) ** 2) / (2 * sigma_y**2)
+    g = amplitude * np.exp(-(a * ((x - xc) ** 2) + 2 * b * (x - xc) * (y - yc) + c * ((y - yc) ** 2)))
     return g.ravel()
 
 
@@ -305,13 +291,8 @@ def random_walk(box_size, step_size, n_step, sampling_rate, low_pass=5):
     boundaries = np.array([(0, box_size[0]), (0, box_size[1])])
     size = np.diff(boundaries, axis=1).ravel()
     # "simulation"
-    trajectory = np.cumsum(
-        directions[np.random.randint(0, 9, (n_step,))] * step_size, axis=0
-    )
-    x, y = (
-        np.abs((trajectory + start - boundaries[:, 0] + size) % (2 * size) - size)
-        + boundaries[:, 0]
-    ).T
+    trajectory = np.cumsum(directions[np.random.randint(0, 9, (n_step,))] * step_size, axis=0)
+    x, y = (np.abs((trajectory + start - boundaries[:, 0] + size) % (2 * size) - size) + boundaries[:, 0]).T
 
     b, a = ss.butter(N=1, Wn=low_pass * 2 / sampling_rate)
     # zero phase shift filter
@@ -324,9 +305,7 @@ def random_walk(box_size, step_size, n_step, sampling_rate, low_pass=5):
     return x, y
 
 
-def make_test_spike_map(
-    rate, sigma, pos_fields, box_size, n_step=10 ** 4, step_size=0.05
-):
+def make_test_spike_map(rate, sigma, pos_fields, box_size, n_step=10**4, step_size=0.05):
     from scipy.interpolate import interp1d
 
     def infield(pos, pos_fields):

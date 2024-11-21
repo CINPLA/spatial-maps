@@ -34,7 +34,7 @@ def separate_fields_by_distance(rate_map, factor=0.7):
     """
     import scipy.spatial as spatial
 
-    acorr = autocorrelation(rate_map, mode='full', normalize=True)
+    acorr = autocorrelation(rate_map, mode="full", normalize=True)
     acorr_maxima = find_peaks(acorr)
 
     def place_field_radius(auto_correlation, maxima):
@@ -42,7 +42,7 @@ def separate_fields_by_distance(rate_map, factor=0.7):
         center = map_size / 2
         distances = np.linalg.norm(maxima - center, axis=1)
         distances_sorted = sorted(distances)
-        min_distance = distances_sorted[1] # the first one is basically the center
+        min_distance = distances_sorted[1]  # the first one is basically the center
         return factor * min_distance / 2
 
     # TODO verify this for an example where there are fields too close
@@ -50,7 +50,7 @@ def separate_fields_by_distance(rate_map, factor=0.7):
         result = []
         rate_map_maxima_value = rate_map[tuple(rate_map_maxima.T)]
         distances = spatial.distance.cdist(rate_map_maxima, rate_map_maxima)
-        too_close_pairs = np.where(distances < place_field_radius*2)
+        too_close_pairs = np.where(distances < place_field_radius * 2)
         not_accepted = []
 
         for i, j in zip(*too_close_pairs):
@@ -99,9 +99,10 @@ def peak_to_peak_distance(sorted_peaks, index_a, index_b):
 
 def rotate_corr(acorr, mask):
     import numpy.ma as ma
-    from scipy.ndimage.interpolation import rotate
+    from scipy.ndimage import rotate
+
     m_acorr = ma.masked_array(acorr, mask=mask)
-    angles = range(30, 180+30, 30)
+    angles = range(30, 180 + 30, 30)
     corr = []
     # Rotate and compute correlation coefficient
     for angle in angles:
@@ -114,7 +115,7 @@ def rotate_corr(acorr, mask):
 
 
 def gridness(rate_map, return_mask=False):
-    '''
+    """
     Calculates gridness based on the autocorrelation of a rate map.
     The Pearson's product-moment correlation coefficients are calculated between A and A_r,
     where A_r is the rotated version of A at 30, 60, 90, 120, and 150 degrees.
@@ -133,11 +134,12 @@ def gridness(rate_map, return_mask=False):
     Returns
     -------
     out : gridness
-    '''
+    """
     import numpy.ma as ma
+
     rate_map = rate_map.copy()
     rate_map[~np.isfinite(rate_map)] = 0
-    acorr = autocorrelation(rate_map, mode='full', normalize=True)
+    acorr = autocorrelation(rate_map, mode="full", normalize=True)
 
     acorr_maxima = find_peaks(acorr)
     inner_radius = 0.5 * peak_to_peak_distance(acorr_maxima, 0, 1)
@@ -151,12 +153,12 @@ def gridness(rate_map, return_mask=False):
     center = np.array(acorr.shape) / 2
     lower = (center - outer_radius).astype(int)
     upper = (center + outer_radius).astype(int)
-    acorr = acorr[lower[0]:upper[0], lower[1]:upper[1]]
+    acorr = acorr[lower[0] : upper[0], lower[1] : upper[1]]
 
     # create a mask
     ylen, xlen = acorr.shape  # ylen, xlen is the correct order for meshgrid
-    x = np.linspace(- xlen / 2., xlen / 2., xlen)
-    y = np.linspace(- ylen / 2., ylen / 2., ylen)
+    x = np.linspace(-xlen / 2.0, xlen / 2.0, xlen)
+    y = np.linspace(-ylen / 2.0, ylen / 2.0, ylen)
     X, Y = np.meshgrid(x, y)
     distance_map = np.sqrt(X**2 + Y**2)
     mask = (distance_map < inner_radius) | (distance_map > outer_radius)
@@ -217,7 +219,7 @@ def spacing_and_orientation(peaks, box_size):
     spacing = np.mean(closest_distances)
 
     # sort by angle
-    a = np.arctan2(closest_relpos[:,0], closest_relpos[:,1]) % (2 * np.pi)
+    a = np.arctan2(closest_relpos[:, 0], closest_relpos[:, 1]) % (2 * np.pi)
     a_sort = np.argsort(a)
 
     # extract lowest angle in radians
@@ -226,12 +228,10 @@ def spacing_and_orientation(peaks, box_size):
     return spacing, orientation
 
 
-def autocorrelation_centers(rate_map, threshold=0, center_method='maxima'):
+def autocorrelation_centers(rate_map, threshold=0, center_method="maxima"):
     # autocorrelate. Returns array (2x - 1) the size of rate_map
-    acorr = fftcorrelate2d(
-        rate_map, rate_map, mode='full', normalize=True)
+    acorr = fftcorrelate2d(rate_map, rate_map, mode="full", normalize=True)
     fields = separate_fields_by_laplace(rate_map, threshold=threshold)
 
-    field_centers = calculate_field_centers(
-        rate_map, fields, center_method=center_method)
+    field_centers = calculate_field_centers(rate_map, fields, center_method=center_method)
     return field_centers
