@@ -1,0 +1,36 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: fix-encoding-pragma
+        exclude: tests/test_data
+      - id: trailing-whitespace
+        exclude: tests/test_data
+      - id: end-of-file-fixer
+        exclude: tests/test_data
+      - id: check-docstring-first
+      - id: debug-statements
+      - id: check-toml
+      - id: check-yaml
+        exclude: tests/test_data
+      - id: requirements-txt-fixer
+      - id: detect-private-key
+      - id: check-merge-conflict
+
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
+        exclude: tests/test_data
+      - id: black-jupyter
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.4
+    hooks:
+      - id: ruff
