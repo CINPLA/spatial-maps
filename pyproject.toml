@@ -18,6 +18,7 @@ classifiers = [
 dependencies = [
     "numpy<2",
     "scipy",
+    "scikit-image",
     "astropy",
     "pandas",
     "elephant",
