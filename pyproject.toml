@@ -16,13 +16,13 @@ classifiers = [
 ]
 
 dependencies = [
-    "numpy<2",
+    "numpy",
     "scipy",
     "scikit-image",
     "astropy",
     "pandas",
-    "elephant",
-    "matplotlib"
+    "matplotlib",
+    "quantities"
 ]
 
 [project.urls]
